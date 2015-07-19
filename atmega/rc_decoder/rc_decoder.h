@@ -17,7 +17,7 @@ struct rc_pulse THOMSON_DATA_ONE_PULSE;
 struct rc_pulse THOMSON_DATA_ZERO_PULSE;
 struct rc_pulse THOMSON_END_PULSE;
 
-typedef void (*SignalMatchedFptr)(uint32_t*);
+typedef void (*SignalMatchedFptr)(char*);
 
 typedef struct pulse_decoder
 {
@@ -28,7 +28,12 @@ typedef struct pulse_decoder
 		WaitingEnd
 	} state;
 	uint16_t bits_read;
-	uint32_t data;
+	union pulse_data
+	{
+		char chars[4];
+		uint32_t data;
+	}data_un;
+
 	SignalMatchedFptr matched_cb;
 } PulseDecoder;
 
