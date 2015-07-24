@@ -30,6 +30,15 @@ void Blink()
 	}
 }
 
+void SetupNVIC()
+{
+	RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN , ENABLE);
+	AFIO->EXTICR[0]|=AFIO_EXTICR1_EXTI2_PE;
+	EXTI->IMR|=( EXTI_IMR_MR2);
+	EXTI->RTSR|=( EXTI_RTSR_TR2);
+	NVIC_EnableIRQ (EXTI2_IRQn);
+}
+
 void Setup()
 {
 	setupBulbPorts();
@@ -44,15 +53,6 @@ void Setup()
 	//LCDInit();
 
 
-}
-
-void SetupNVIC()
-{
-	RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN , ENABLE);
-	AFIO->EXTICR[0]|=AFIO_EXTICR1_EXTI2_PE;
-	EXTI->IMR|=( EXTI_IMR_MR2);
-	EXTI->RTSR|=( EXTI_RTSR_TR2);
-	NVIC_EnableIRQ (EXTI2_IRQn);
 }
 
 void EXTI2_IRQHandler(void)
@@ -90,7 +90,7 @@ void TIM6_IRQHandler(void)
 
 int main(void)
 {
-	ir_decoder.matched_cb = signalMatched;
+	//ir_decoder.matched_cb = signalMatched;
 	rc_processor.decoder = &ir_decoder;
 	InitializeUSART();
 	sendString("hello\n");

@@ -2,12 +2,13 @@
 
 //#define RC_DEBUG
 
+
+
+static uint16_t pulse_tolerance = 20;
 struct rc_pulse THOMSON_START_PULSE = {200, 200};
 struct rc_pulse THOMSON_DATA_ONE_PULSE = {25, 100};
 struct rc_pulse THOMSON_DATA_ZERO_PULSE = {25, 50};
 struct rc_pulse THOMSON_END_PULSE = {25, 445};
-
-static uint16_t pulse_tolerance = 20;
 
 //debug only 
 #ifdef RC_DEBUG
@@ -86,7 +87,7 @@ void processDecoding(PulseDecoder *decoder, Pulse *pulse)
 	case WaitingEnd:
 		if (isPulseMatch(&THOMSON_END_PULSE, pulse))
 		{
-			decoder->matched_cb(&decoder->data_un.data);
+			decoder->matched_cb((char *)&decoder->data_un.data);
 			decoder->state = WaitingBegin;
 		}
 		ResetDecoder(decoder);
