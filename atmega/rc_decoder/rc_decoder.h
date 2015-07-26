@@ -12,21 +12,21 @@ struct rc_pulse
 };
 
 typedef struct rc_pulse Pulse;
-struct rc_pulse THOMSON_START_PULSE;
-struct rc_pulse THOMSON_DATA_ONE_PULSE;
-struct rc_pulse THOMSON_DATA_ZERO_PULSE;
-struct rc_pulse THOMSON_END_PULSE;
+extern struct rc_pulse THOMSON_START_PULSE;
+extern struct rc_pulse THOMSON_DATA_ONE_PULSE;
+extern struct rc_pulse THOMSON_DATA_ZERO_PULSE;
+extern struct rc_pulse THOMSON_END_PULSE;
 
 typedef void (*SignalMatchedFptr)(char*);
-
+enum pulse_dec_state
+{
+	WaitingBegin,
+	WaitingData,
+	WaitingEnd
+};
 typedef struct pulse_decoder
 {
-	enum pulse_dec_state
-	{
-		WaitingBegin,
-		WaitingData,
-		WaitingEnd
-	} state;
+	pulse_dec_state state;
 	uint16_t bits_read;
 	union pulse_data
 	{

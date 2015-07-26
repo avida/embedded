@@ -1,11 +1,10 @@
-CC = avr-gcc
+CC = avr-g++
 AVR-OC = avr-objcopy
 F_CPU = 16000000
 CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328
-CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -O3
-CFLAGS += -Wall -Wstrict-prototypes
-CFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--relax
-CFLAGS += -std=gnu99
+CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os
+CFLAGS += -Wall -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--relax
+CFLAGS += -std=c++11
 SOURCES = main.c rc_decoder/rc_decoder.c uart.c
 OBJECTS = main.o rc_decoder/rc_decoder.o uart.o
 

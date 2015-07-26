@@ -7,6 +7,7 @@
 #include <avr/power.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <stdio.h>
 #include "uart.h"
 #include "rc_decoder/rc_decoder.h"
 //dccduino ->   gpio
@@ -49,20 +50,29 @@ char led_bit = 1<<PORT5;
 ISR (TIMER0_COMPA_vect)  
 {
    //PORTB ^= led_bit;
-   ProcessPulse(&rc_processor, !(PIND & 1<<PD3) );
+   //ProcessPulse(&rc_processor, !(PIND & 1<<PD3) );
 }
 
 int main(void) {
     ir_decoder.matched_cb = onDecode;
     rc_processor.decoder = &ir_decoder;
+    auto ert = 2;
     setup_ports();
     uart_init();
     putString("Privet haha\r\n");
    
    //PORTB |= led_bit;
-   setupTimer();
+   //setupTimer();
    while (1)
    {
+     if ((PIND & 1<<PD3))
+     {
+      PORTB |= led_bit;
+     }
+     else
+     {
+      PORTB &= ~led_bit;
+     }
    }
    return 0;    
 }
