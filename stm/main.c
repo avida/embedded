@@ -11,6 +11,7 @@
 #include "rc_decoder/rc_decoder.h"
 
 extern int _ebss;
+
 char str[80];
 void Blink()
 {
@@ -45,6 +46,7 @@ void Setup()
 	setuKeyPorts();
 	initTimer();
 	SetupNVIC();
+
 	initTIM6Timer();
 	//if (InitConsole())
 	{
@@ -55,15 +57,23 @@ void Setup()
 
 }
 
+PulseDecoder ir_decoder;
+PulseProcessor rc_processor;
+
+extern "C"
+{
 void EXTI2_IRQHandler(void)
 {
-	BulbOn(1);
+	BulbOn(2);
 	EXTI->PR |=0x03;
 }
 
-
-	PulseDecoder ir_decoder;
-	PulseProcessor rc_processor;
+void TIM6_IRQHandler(void)
+{
+	TIM6->SR &= ~TIM_SR_UIF;
+	ProcessPulse(&rc_processor, isKeyPressed(1));
+}
+}
 
 void signalMatched(uint32_t *data)
 {
@@ -82,11 +92,6 @@ void printPulses(struct IR_Pulses_struct *pc)
 	*/
 }
 
-void TIM6_IRQHandler(void)
-{
-	TIM6->SR &= ~TIM_SR_UIF;
-	ProcessPulse(&rc_processor, isKeyPressed(1));
-}
 
 int main(void)
 {
@@ -94,14 +99,13 @@ int main(void)
 	rc_processor.decoder = &ir_decoder;
 	InitializeUSART();
 	sendString("hello\n");
-	sendString("11111\n");
 	Setup();
 	//LCDSetBounds(0,0,LCD_WIDTH-1,LCD_HEIGHT-1);
 	//LCDClear();
 	//PrintStr("Lets go");
 	//sprintf(str, "_ebss %x", &_ebss);
 	//PrintStr(str);
-	while(1)
+	while(true)
 	{
 		if(isKeyPressed(1))
 		{

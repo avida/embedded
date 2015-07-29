@@ -1,3 +1,4 @@
+
 #include <stm32f10x_usart.h>
 
 void InitializeUSART()
