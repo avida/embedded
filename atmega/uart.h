@@ -1,8 +1,11 @@
-#ifndef __UART_H__
-#define __UART_H__
+#pragma once 
 
-void uart_init(void);
-void uart_putchar(char c);
-void putString(const char *str);
-
-#endif
+namespace uart
+{
+   class UART
+   {
+   public:
+      UART();
+      UART& operator << (const char * str);
+   };
+}

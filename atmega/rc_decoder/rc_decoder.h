@@ -1,5 +1,4 @@
-#ifndef __RC_DECODER__
-#define __RC_DECODER__
+#pragma once 
 
 #include <stdint.h>
 #include <string.h>
@@ -51,5 +50,3 @@ char isPulseMatch(Pulse * p1,  Pulse * p2);
 void ResetDecoder(PulseDecoder *decoder);
 
 void processDecoding(PulseDecoder *decoder, Pulse *pulse);
-
-#endif

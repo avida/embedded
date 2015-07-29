@@ -4,6 +4,8 @@
 #include <avr/io.h>
 #include <util/setbaud.h>
 
+namespace uart
+{
 
 void uart_init(void) {
     UBRR0H = UBRRH_VALUE;
@@ -32,3 +34,15 @@ void putString(const char *str)
       str++;
    }
 }
+
+UART::UART()
+{
+  uart_init(); 
+}
+UART& UART::operator << (const char * str)
+{
+  putString (str);
+}
+
+}
+

@@ -5,8 +5,8 @@ CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328
 CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os
 CFLAGS += -Wall -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--relax
 CFLAGS += -std=c++11
-SOURCES = main.c rc_decoder/rc_decoder.c uart.c
-OBJECTS = main.o rc_decoder/rc_decoder.o uart.o
+SOURCES = main.c rc_decoder/rc_decoder.c uart.c gpio.c
+OBJECTS = main.o rc_decoder/rc_decoder.o uart.o gpio.o
 
 #override CFLAGS = -g -DF_CPU=$(F_CPU) -Wall -O2 -mmcu=atmega328 -std=gnu99$
 #override LDFLAGS= -Wl,-u,vfprintf,-Map,main.map
