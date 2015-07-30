@@ -87,7 +87,8 @@ void processDecoding(PulseDecoder *decoder, Pulse *pulse)
 	case WaitingEnd:
 		if (isPulseMatch(&THOMSON_END_PULSE, pulse))
 		{
-			decoder->matched_cb((char *)&decoder->data_un.data);
+			if (decoder->matched_cb)
+				decoder->matched_cb((char *)&decoder->data_un.data);
 			decoder->state = WaitingBegin;
 		}
 		ResetDecoder(decoder);
