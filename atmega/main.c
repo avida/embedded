@@ -30,8 +30,9 @@ void setup_ports()
 }
 
 char str[80];
-void onDecode (char* data)
+void onDecode (void* d)
 {
+   char* data = (char *)d;
    sprintf(str, "decoded: %02x%02x%02x\n", *(data+2), *(data+1), *data );
    serial << str;
 }
