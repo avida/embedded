@@ -7,12 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "usart.h"
-#include "rc_decoder/rc_decoder.h"
-
-extern int _ebss;
+#include <uart.h>
+#include <rc_decoder/rc_decoder.h>
+#include <gpio.h>
 
 char str[80];
+
 void Blink()
 {
 	int on = 0;
@@ -42,11 +42,8 @@ void SetupNVIC()
 
 void Setup()
 {
-	setupBulbPorts();
-	setuKeyPorts();
 	initTimer();
 	SetupNVIC();
-
 	initTIM6Timer();
 	//if (InitConsole())
 	{
@@ -59,6 +56,8 @@ void Setup()
 
 PulseDecoder ir_decoder;
 PulseProcessor rc_processor;
+gpio::PinInput *irpin_ptr;
+uart::UART *serial_ptr;
 
 extern "C"
 {
@@ -71,14 +70,14 @@ void EXTI2_IRQHandler(void)
 void TIM6_IRQHandler(void)
 {
 	TIM6->SR &= ~TIM_SR_UIF;
-	ProcessPulse(&rc_processor, isKeyPressed(1));
+	ProcessPulse(&rc_processor, *irpin_ptr);
 }
 }
 
-void signalMatched(uint32_t *data)
+void signalMatched(void *data)
 {
-	sprintf(str, "ir data: %x \r\n", *data );
-	sendString(str);
+	sprintf(str, "ir data: %x \r\n", *((uint32_t *) data) );
+	*serial_ptr << str;
 }
 
 void printPulses(struct IR_Pulses_struct *pc)
@@ -92,28 +91,24 @@ void printPulses(struct IR_Pulses_struct *pc)
 	*/
 }
 
-
 int main(void)
 {
-	//ir_decoder.matched_cb = signalMatched;
+	// led pins c6,7 d13,6
+	gpio::PinOutput led1(gpio::C, 7);
+	// key pin E2-5
+	gpio::PinInput irpin(gpio::E, 3);
+	irpin_ptr = &irpin;
+	uart::UART serial;
+	serial_ptr = &serial;
+	serial << "hehelo\n";
+	ir_decoder.matched_cb = signalMatched;
 	rc_processor.decoder = &ir_decoder;
-	InitializeUSART();
-	sendString("hello\n");
+
 	Setup();
 	//LCDSetBounds(0,0,LCD_WIDTH-1,LCD_HEIGHT-1);
 	//LCDClear();
-	//PrintStr("Lets go");
-	//sprintf(str, "_ebss %x", &_ebss);
-	//PrintStr(str);
 	while(true)
 	{
-		if(isKeyPressed(1))
-		{
-			BulbOn(1);
-		}
-		else
-		{
-			BulbOff(1);
-		}
+		led1 = irpin;
 	}
 }

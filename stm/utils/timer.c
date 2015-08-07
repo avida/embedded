@@ -11,10 +11,15 @@
 #define CTRL_TICKINT_Reset    ((u32)0xFFFFFFFD)
 
 volatile u32 tick;
+extern "C"
+{
+
 void SysTick_Handler()
 {
 	if (tick != 0)
 		tick -=1;
+}
+  
 }
 
 void SysTick_CounterCmd(u32);

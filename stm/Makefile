@@ -10,7 +10,7 @@ LFLAGS = -mcpu=cortex-m3 -mthumb -g0  -Os -Wl,--gc-sections
 LFLAGS += -lm -lgcc -lc -lrdimon --specs=nosys.specs -Wl,-Tsystem/arm-gcc-link.ld
 
 DIRS = console utils lcd system system/STM32F10x_HD_STDLIB 
-SOURCES = key.c led.c main.c utils/timer.c console/console.c lcd/lcd.c lcd/FComic18B_ASCII.c 
+SOURCES = key.c led.c main.c utils/timer.c console/console.c lcd/lcd.c lcd/FComic18B_ASCII.c gpio.c uart.c
 SOURCES += $(wildcard system/STM32F10x_HD_STDLIB/*.c) system/STM32F10x_HD_STDLIB/startup_stm32f10x_hd.s
 COMMON_SOURCES = rc_decoder/rc_decoder.c
 

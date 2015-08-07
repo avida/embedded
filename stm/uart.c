@@ -1,5 +1,9 @@
-
+#include <uart.h>
 #include <stm32f10x_usart.h>
+#define BAUD 115200
+
+namespace uart
+{
 
 void InitializeUSART()
 {
@@ -10,7 +14,7 @@ void InitializeUSART()
                            RCC_APB2Periph_AFIO, ENABLE);
     USART_Cmd(USART1, ENABLE);
 
-    usartConfig.USART_BaudRate = 2*115200;
+    usartConfig.USART_BaudRate = 2*BAUD;
     usartConfig.USART_WordLength = USART_WordLength_8b;
     usartConfig.USART_StopBits = USART_StopBits_1;
     usartConfig.USART_Parity = USART_Parity_No;
@@ -32,7 +36,7 @@ void InitializeUSART()
     gpioConfig.GPIO_Pin = GPIO_Pin_10;
     GPIO_Init(GPIOA, &gpioConfig);
 }
-
+/*
 unsigned char USART_ReadByteSync(USART_TypeDef *USARTx)
 {
     while ((USARTx->SR & USART_SR_RXNE) == 0)
@@ -40,19 +44,30 @@ unsigned char USART_ReadByteSync(USART_TypeDef *USARTx)
     }
 
     return (unsigned char)USART_ReceiveData(USARTx);
+}*/
+
+void uart_putchar(char c) {
+   while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+   USART_SendData(USART1, c);
 }
 
-void sendByte(USART_TypeDef *USARTx, char byte)
+void putString(const char *str)
 {
-	while (USART_GetFlagStatus(USARTx, USART_FLAG_TXE) == RESET);
-	USART_SendData(USARTx, byte);
-}
-void sendString(char* string)
-{
-	while(*string)
-	{
-		sendByte(USART1, *string);
-		string ++;
-	}
+   while(*str)
+   {
+      uart_putchar(*str);
+      str++;
+   }
 }
 
+UART::UART()
+{
+  InitializeUSART(); 
+}
+
+UART& UART::operator << (const char * str)
+{
+  putString (str);
+}
+
+}
