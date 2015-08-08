@@ -59,8 +59,7 @@ ISR (TIMER0_COMPA_vect)
 {
    //ProcessPulse(&rc_processor, !pd3 );
 }
-
-gpio::PinOutput pd6(gpio::D, 6);
+gpio::PinOutput pd6(gpio::D, 6 );
 void ir_send(int p)
 {
   for (int i=0; i < p; ++i)
@@ -73,47 +72,34 @@ void ir_send(int p)
 
 
 }
-void PWM()
+
+#define TIMER_ENABLE_PWM    (TCCR2A |= _BV(COM2B1))
+#define TIMER_DISABLE_PWM   (TCCR2A &= ~(_BV(COM2B1)))
+
+void PWM(int freq )
 {
-
-    /* DDRD |= (1 << DDD6);
-     gpio::PinOutput pb6(gpio::B, 6);
-     */
-    // PD6 is now an output
-/*
-    OCR0A = 5;
-    // set PWM for 50% duty cycle
-
-
-    TCCR0A |= (1 << COM0A1);
-    // set none-inverting mode
-
-    TCCR0A |= (1 << WGM01) | (1 << WGM00);
-    // set fast PWM Mode
-
-    TCCR0B |= (1 << CS00) ;
-    // set prescaler to 8 and starts PWM
-
-*/
-
-    while (1)
-    {
-     // TCCR0A &= ~(1 << COM0A1);
-      ir_send(50);
-      _delay_ms(10);
-     // TCCR0A |= (1 << COM0A1);
-        // we have a working Fast PWM
-
-       //TCCR0A &= ~(1 << COM0A1);
-      //PORTD = (1 << PORT6);
-    }
+  // setup TIM2 to generate pwm
+  gpio::PinOutput pin3(gpio::D, 3 );
+  const uint8_t pwmval = F_CPU / 2000 / (freq);
+  TCCR2A               = _BV(WGM20); 
+  TCCR2B               = _BV(WGM22) | _BV(CS20);
+  OCR2A                = pwmval; 
+  OCR2B                = pwmval / 3;
+  while (1)
+  {
+    TIMER_ENABLE_PWM;
+    _delay_ms(500);
+    TIMER_DISABLE_PWM;
+    pb3 = false;
+    _delay_ms(500);
+  }
 }
 
 int main(void) {
 
     ir_decoder.matched_cb = onDecode;
     rc_processor.decoder = &ir_decoder;
-    PWM();
+    PWM(38);
 
     setup_ports();
     serial << "Privet\n";
