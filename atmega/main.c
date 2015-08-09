@@ -4,8 +4,7 @@
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "uart.h"
-#include "uart.h"
+#include <uart.h>
 #include "rc_decoder/rc_decoder.h"
 #include "gpio.h"
 //dccduino ->   gpio
@@ -20,6 +19,27 @@ gpio::PinInput pd3(gpio::D, 3);
 gpio::PinOutput pd6(gpio::D, 6 );
 
 uart::UART serial;
+
+#define TIMER_ENABLE_PWM    (TCCR2A |= _BV(COM2B1))
+#define TIMER_DISABLE_PWM   (TCCR2A &= ~(_BV(COM2B1)))
+
+void PWM(int freq )
+{
+  // setup TIM2 to generate pwm
+  const uint8_t pwmval = F_CPU / 2000 / (freq);
+  TCCR2A               = _BV(WGM20); 
+  TCCR2B               = _BV(WGM22) | _BV(CS20);
+  OCR2A                = pwmval; 
+  OCR2B                = pwmval / 3;
+  while (1)
+  {
+    TIMER_ENABLE_PWM;
+    _delay_ms(500);
+    TIMER_DISABLE_PWM;
+    //pin3 = false;
+    _delay_ms(500);
+  }
+}
 
 char str[80];
 void onDecode (void* d)
@@ -43,44 +63,24 @@ void setupTimer()
    sei();
 }
 
-PulseDecoder ir_decoder;
-PulseProcessor rc_processor;
-char led_bit = 1<<PORT5;
+//PulseDecoder ir_decoder;
+//PulseProcessor rc_processor;
+irRemote::DataDecoder ir_decoder;
 
 ISR (TIMER0_COMPA_vect)  
 {
-   ProcessPulse(&rc_processor, !pd3);
+  ir_decoder.ProcessSignal(!pd3);
+   //ProcessPulse(&rc_processor, !pd3);
 }
 //gpio::PinOutput pin3(gpio::D, 3 );
 
-#define TIMER_ENABLE_PWM    (TCCR2A |= _BV(COM2B1))
-#define TIMER_DISABLE_PWM   (TCCR2A &= ~(_BV(COM2B1)))
-
-void PWM(int freq )
-{
-  // setup TIM2 to generate pwm
-  const uint8_t pwmval = F_CPU / 2000 / (freq);
-  TCCR2A               = _BV(WGM20); 
-  TCCR2B               = _BV(WGM22) | _BV(CS20);
-  OCR2A                = pwmval; 
-  OCR2B                = pwmval / 3;
-  while (1)
-  {
-    TIMER_ENABLE_PWM;
-    _delay_ms(500);
-    TIMER_DISABLE_PWM;
-    //pin3 = false;
-    _delay_ms(500);
-  }
-}
-
 int main(void) {
 
-    ir_decoder.matched_cb = onDecode;
-    rc_processor.decoder = &ir_decoder;
+ //   ir_decoder.matched_cb = onDecode;
+ //   rc_processor.decoder = &ir_decoder;
 
     //PWM(38);
-
+    ir_decoder.SetDecodeCB(onDecode);
     serial << "Privet\n";
     setupTimer();
 
