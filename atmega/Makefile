@@ -13,6 +13,7 @@ CFLAGS += -Wall -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--rela
 CFLAGS += -std=c++11
 INCLUDES= -I$(COMMON_DIR)
 CFLAGS += $(INCLUDES)
+LFLAGS = -mmcu=atmega328 
 
 OBJDIR = obj
 OBJECTS = $(patsubst %.c, $(OBJDIR)/%.o, $(SOURCES))
@@ -39,7 +40,7 @@ $(OBJDIR)/%.o: %.c
 
 
 $(OBJDIR)/main.elf: $(OBJECTS) $(OBJECTS_FROM_COMMON)
-	$(CC) -mmcu=atmega328  $(OBJECTS) $(OBJECTS_FROM_COMMON) -o $@
+	$(CC) $(LFLAGS)  $(OBJECTS) $(OBJECTS_FROM_COMMON) -o $@
 
 clean: 
 	rm -rf $(OBJDIR)/*

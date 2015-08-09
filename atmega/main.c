@@ -1,8 +1,3 @@
-/* Demo code for serial communication
- * Sends an 'X' character when button pressed
- * Listens for 'L' and then toggles LED
- * Simple polled-serial style
- * */
 #include <avr/io.h>
 #include <avr/power.h>
 #include <util/delay.h>
@@ -19,15 +14,12 @@
 // A0-5 -> PC0-5
 // A6-7 = ADC6-7
 //#define F_CPU 16000000UL
-gpio::PinOutput ledPort(gpio::B, 5);
-//gpio::PinOutput pd3(gpio::D, 3);
+
+gpio::PinOutput ledPin(gpio::B, 5);
+gpio::PinInput pd3(gpio::D, 3);
+gpio::PinOutput pd6(gpio::D, 6 );
 
 uart::UART serial;
-void setup_ports()
-{
-//   gpio::setupForOutput(ledPort);
-//   gpio::setupForInput(pd3);
-}
 
 char str[80];
 void onDecode (void* d)
@@ -57,21 +49,9 @@ char led_bit = 1<<PORT5;
 
 ISR (TIMER0_COMPA_vect)  
 {
-   //ProcessPulse(&rc_processor, !pd3 );
+   ProcessPulse(&rc_processor, !pd3);
 }
-gpio::PinOutput pd6(gpio::D, 6 );
-void ir_send(int p)
-{
-  for (int i=0; i < p; ++i)
-  {
-      pd6 =true;
-      _delay_us(2);
-          pd6 =false;
-      _delay_us(2);
-  }
-
-
-}
+//gpio::PinOutput pin3(gpio::D, 3 );
 
 #define TIMER_ENABLE_PWM    (TCCR2A |= _BV(COM2B1))
 #define TIMER_DISABLE_PWM   (TCCR2A &= ~(_BV(COM2B1)))
@@ -79,7 +59,6 @@ void ir_send(int p)
 void PWM(int freq )
 {
   // setup TIM2 to generate pwm
-  gpio::PinOutput pin3(gpio::D, 3 );
   const uint8_t pwmval = F_CPU / 2000 / (freq);
   TCCR2A               = _BV(WGM20); 
   TCCR2B               = _BV(WGM22) | _BV(CS20);
@@ -90,7 +69,7 @@ void PWM(int freq )
     TIMER_ENABLE_PWM;
     _delay_ms(500);
     TIMER_DISABLE_PWM;
-    pb3 = false;
+    //pin3 = false;
     _delay_ms(500);
   }
 }
@@ -99,24 +78,15 @@ int main(void) {
 
     ir_decoder.matched_cb = onDecode;
     rc_processor.decoder = &ir_decoder;
-    PWM(38);
 
-    setup_ports();
+    //PWM(38);
+
     serial << "Privet\n";
-    serial << "adasdasdas\n" << "sdfdsf\n"; 
     setupTimer();
-    /*
+
    while (1)
    {
-     if (pd3)
-     {
-         ledPort = true;
-     }
-     else
-     {
-         ledPort = false;
-     }
+      ledPin = !pd3;
    }
-   */
    return 0;    
 }
