@@ -1,5 +1,3 @@
-#include "led.h"
-#include "key.h"
 #include "utils/timer.h"
 #include "lcd/lcd.h"
 #include "console/console.h"
@@ -12,24 +10,6 @@
 #include <gpio.h>
 
 char str[80];
-
-void Blink()
-{
-	int on = 0;
-	while(1)
-	{
-		Delay(1000);
-		if (on)
-		{
-			BulbOn(3);
-		}
-		else
-		{
-			BulbOff(3);
-		}
-		on = !on;
-	}
-}
 
 void SetupNVIC()
 {
@@ -45,50 +25,35 @@ void Setup()
 	initTimer();
 	SetupNVIC();
 	initTIM6Timer();
-	//if (InitConsole())
-	{
-		//Blink();
-	}
+	//InitConsole();
 	//LCDInit();
-
-
 }
 
-PulseDecoder ir_decoder;
-PulseProcessor rc_processor;
+irRemote::DataDecoder ir_decoder;
 gpio::PinInput *irpin_ptr;
 uart::UART *serial_ptr;
 
+// Interraption handlers section
 extern "C"
 {
+
 void EXTI2_IRQHandler(void)
 {
-	BulbOn(2);
 	EXTI->PR |=0x03;
 }
 
 void TIM6_IRQHandler(void)
 {
 	TIM6->SR &= ~TIM_SR_UIF;
-	ProcessPulse(&rc_processor, *irpin_ptr);
+	ir_decoder.ProcessSignal(*irpin_ptr);
 }
+
 }
 
 void signalMatched(void *data)
 {
 	sprintf(str, "ir data: %x \r\n", *((uint32_t *) data) );
 	*serial_ptr << str;
-}
-
-void printPulses(struct IR_Pulses_struct *pc)
-{
-	/*
-	for (int i = 0; i < max_pulse; i++)
-	{
-		sprintf(str, "pulse %d on %d off %d \r\n", i, pc->pulses[i][0], pc->pulses[i][1]);
-		sendString(str);
-	}
-	*/
 }
 
 int main(void)
@@ -101,8 +66,7 @@ int main(void)
 	uart::UART serial;
 	serial_ptr = &serial;
 	serial << "hehelo\n";
-	ir_decoder.matched_cb = signalMatched;
-	rc_processor.decoder = &ir_decoder;
+	ir_decoder.SetDecodeCB(signalMatched);
 
 	Setup();
 	//LCDSetBounds(0,0,LCD_WIDTH-1,LCD_HEIGHT-1);

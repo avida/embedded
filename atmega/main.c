@@ -63,22 +63,15 @@ void setupTimer()
    sei();
 }
 
-//PulseDecoder ir_decoder;
-//PulseProcessor rc_processor;
 irRemote::DataDecoder ir_decoder;
 
 ISR (TIMER0_COMPA_vect)  
 {
   ir_decoder.ProcessSignal(!pd3);
-   //ProcessPulse(&rc_processor, !pd3);
 }
 //gpio::PinOutput pin3(gpio::D, 3 );
 
 int main(void) {
-
- //   ir_decoder.matched_cb = onDecode;
- //   rc_processor.decoder = &ir_decoder;
-
     //PWM(38);
     ir_decoder.SetDecodeCB(onDecode);
     serial << "Privet\n";

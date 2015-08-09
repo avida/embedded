@@ -31,24 +31,17 @@ void printPulses(PulseStorage *ps)
 
 #endif
 /*
-#ifdef RC_DEBUG
-               pulse_storage.pulses[pulse_storage.counter++] = processor->current_pulse;
-               if (pulse_storage.counter >= max_pulse)
-               {
-                  printPulses(&pulse_storage);
-                  pulse_storage.counter = 0;
-               }
-#endif 
+
 */
 namespace irRemote
 {
 
-const class Pulse THOMSON_START_PULSE = {200, 200};
-const class Pulse THOMSON_DATA_ONE_PULSE = {25, 100};
+const class Pulse THOMSON_START_PULSE =     {200, 200};
+const class Pulse THOMSON_DATA_ONE_PULSE =  {25, 100};
 const class Pulse THOMSON_DATA_ZERO_PULSE = {25, 50};
-const class Pulse THOMSON_END_PULSE = {25, 445};
+const class Pulse THOMSON_END_PULSE =       {25, 445};
 
-Pulse::Pulse(): one_length(0), zero_length(0)
+Pulse::Pulse(): one_length(2), zero_length(2)
 {}
 
 Pulse::Pulse(uint16_t high, uint16_t low): one_length(high), zero_length(low)
@@ -88,7 +81,9 @@ bool PulseDecoder::ProcessSignal(bool state)
 }
 
 DataDecoder::DataDecoder()
-{}
+{
+	ResetDecoder();
+}
 
 void DataDecoder::ResetDecoder()
 {
@@ -150,6 +145,14 @@ void DataDecoder::ProcessSignal(bool state)
 	if (m_decoder.ProcessSignal(state))
 	{
 		// pulse decoded
+		#ifdef RC_DEBUG
+               pulse_storage.pulses[pulse_storage.counter++] = m_decoder.current_pulse;
+               if (pulse_storage.counter >= max_pulse)
+               {
+                  printPulses(&pulse_storage);
+                  pulse_storage.counter = 0;
+               }
+		#endif
 		ProcessPulse(m_decoder.current_pulse);
 		m_decoder.current_pulse.zero_length = 0;
 		m_decoder.current_pulse.one_length = 1;

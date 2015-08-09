@@ -94,6 +94,8 @@ LoopFillZerobss:
   bcc  FillZerobss
 /* Call the clock system intitialization function.*/
   bl  SystemInit   
+/* Init c++ global constructors*/
+  bl __libc_init_array
 /* Call the application's entry point.*/
   bl  main
   bx  lr    
