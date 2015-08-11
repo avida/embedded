@@ -80,32 +80,135 @@ bool PulseDecoder::ProcessSignal(bool state)
 	return false;
 }
 
-DataDecoder::DataDecoder()
+RCProtocolStateMachine::RCProtocolStateMachine()
 {
-	ResetDecoder();
+	ResetState();
 }
 
-void DataDecoder::ResetDecoder()
+
+void RCProtocolStateMachine::RunMachine(StateMachineContext ctx)
+{	
+	switch(m_state)
+	{
+		case ProcessingBegin:
+			if (JumpToDataProcessing(ctx))
+			{
+				m_state = ProcessingData;
+			}
+		break;
+		case ProcessingData:
+		{
+			if (JumpToEndProcessing(ctx))
+			{
+				bits_read++;
+				if (bits_read == 24)
+				{
+					m_state = ProcessingEnd;
+				}
+			}
+		}
+		break;
+		case ProcessingEnd:
+		{
+			if (JumpToBeginProcessing(ctx))
+			{
+				ResetState();
+			}
+		}
+		break;
+	}
+
+}
+void RCProtocolStateMachine::ResetState()
 {
-	state = WaitingBegin;
+	m_state = ProcessingBegin;
 	bits_read = 0;
+}
+
+DecoderStateMachine::DecoderStateMachine()
+{}
+
+void DecoderStateMachine::ProcessPulse(const Pulse& pulse)
+{
+	RunMachine((StateMachineContext *)&pulse);
+}
+
+bool DecoderStateMachine::JumpToDataProcessing(StateMachineContext ctx)
+{
+	Pulse *pulse = (Pulse *)ctx;
+	if (THOMSON_START_PULSE == *pulse)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool DecoderStateMachine::JumpToEndProcessing(StateMachineContext ctx)
+{
+	Pulse *pulse = (Pulse *)ctx;
+	if (THOMSON_DATA_ONE_PULSE == *pulse)
+	{
+		*(data_un.chars + (bits_read >> 3))  |= 1 << (bits_read & 0x7);
+		return true;
+	}
+	else if (THOMSON_DATA_ZERO_PULSE == *pulse)
+	{
+		return true;
+	}
+	else
+	{
+		ResetState();
+		return false;
+	}
+}
+
+bool DecoderStateMachine::JumpToBeginProcessing(StateMachineContext ctx)
+{
+	Pulse *pulse = (Pulse *)ctx;
+	if (THOMSON_END_PULSE == *pulse)
+	{
+		if (matched_cb)
+			matched_cb((char *)&data_un.data);
+	}		
+	return true;
+}
+
+void DecoderStateMachine::ResetState()
+{
+	RCProtocolStateMachine::ResetState();
 	data_un.chars[0] = 0;
 	data_un.chars[1] = 0;
 	data_un.chars[2] = 0;
 	data_un.chars[3] = 0;
 }
 
+DataDecoder::DataDecoder()
+{
+//	ResetDecoder();
+}
+/*
+void DataDecoder::ResetDecoder()
+{
+	state = ProcessingBegin;
+	bits_read = 0;
+	data_un.chars[0] = 0;
+	data_un.chars[1] = 0;
+	data_un.chars[2] = 0;
+	data_un.chars[3] = 0;
+}
+*/
+/*
 void DataDecoder::ProcessPulse(const Pulse& pulse)
 {
 	switch (state)
 	{
-	case WaitingBegin:
+	case ProcessingBegin:
 		if (THOMSON_START_PULSE == pulse)
 		{
-			state = WaitingData;
+			state = ProcessingData;
 		}
 		break;
-	case WaitingData:
+	case ProcessingData:
 		if (THOMSON_DATA_ONE_PULSE == pulse)
 		{
 			*(data_un.chars + (bits_read >> 3))  |= 1 << (bits_read & 0x7);
@@ -121,15 +224,15 @@ void DataDecoder::ProcessPulse(const Pulse& pulse)
 		}
 		if (bits_read == 24)
 		{
-			state = WaitingEnd;
+			state = ProcessingEnd;
 		}
 		break;
-	case WaitingEnd:
+	case ProcessingEnd:
 		if (THOMSON_END_PULSE == pulse)
 		{
 			if (matched_cb)
 				matched_cb((char *)&data_un.data);
-			state = WaitingBegin;
+			state = ProcessingBegin;
 		}
 		ResetDecoder();
 		break;
@@ -139,7 +242,7 @@ void DataDecoder::ProcessPulse(const Pulse& pulse)
 	}
 
 }
-
+*/
 void DataDecoder::ProcessSignal(bool state)
 {
 	if (m_decoder.ProcessSignal(state))
@@ -153,7 +256,7 @@ void DataDecoder::ProcessSignal(bool state)
                   pulse_storage.counter = 0;
                }
 		#endif
-		ProcessPulse(m_decoder.current_pulse);
+      m_dec_sm.ProcessPulse(m_decoder.current_pulse);
 		m_decoder.current_pulse.zero_length = 0;
 		m_decoder.current_pulse.one_length = 1;
 	}

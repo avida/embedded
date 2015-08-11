@@ -31,7 +31,7 @@ void Setup()
 
 irRemote::DataDecoder ir_decoder;
 gpio::PinInput *irpin_ptr;
-uart::UART *serial_ptr;
+uart::UART serial;
 
 // Interraption handlers section
 extern "C"
@@ -53,7 +53,7 @@ void TIM6_IRQHandler(void)
 void signalMatched(void *data)
 {
 	sprintf(str, "ir data: %x \r\n", *((uint32_t *) data) );
-	*serial_ptr << str;
+	serial << str;
 }
 
 int main(void)
@@ -63,8 +63,6 @@ int main(void)
 	// key pin E2-5
 	gpio::PinInput irpin(gpio::E, 3);
 	irpin_ptr = &irpin;
-	uart::UART serial;
-	serial_ptr = &serial;
 	serial << "hehelo\n";
 	ir_decoder.SetDecodeCB(signalMatched);
 

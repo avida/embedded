@@ -10,13 +10,12 @@ namespace irRemote
 {
 typedef void (*SignalMatchedFptr)(void*);
 
-enum pulse_dec_state
+enum IRDataState
 {
-	WaitingBegin,
-	WaitingData,
-	WaitingEnd
+	ProcessingBegin,
+	ProcessingData,
+	ProcessingEnd
 };
-
 
 //
 // Basic class representing pulse
@@ -48,6 +47,50 @@ public:
 };
 
 //
+//
+//
+
+typedef void* StateMachineContext;
+
+class RCProtocolStateMachine
+{
+public:
+	RCProtocolStateMachine();
+	virtual void ResetState();
+	void RunMachine(StateMachineContext ctx);
+protected:
+	virtual bool JumpToDataProcessing(StateMachineContext ctx) { return false; };
+	virtual bool JumpToEndProcessing(StateMachineContext ctx) { return false; };
+	virtual bool JumpToBeginProcessing(StateMachineContext ctx) { return false; };
+	uint16_t bits_read;
+private:
+	IRDataState m_state;
+};
+
+class DecoderStateMachine: public RCProtocolStateMachine
+{
+public:
+	DecoderStateMachine();
+
+	void ProcessPulse(const Pulse& pulse);
+	void SetDecodeCB(SignalMatchedFptr cb) { matched_cb = cb; }
+	void ResetState();
+	
+private:
+	union pulse_data
+	{
+		char chars[4];
+		uint32_t data;
+	}data_un;
+	SignalMatchedFptr matched_cb;
+
+	virtual bool JumpToDataProcessing(StateMachineContext ctx);
+	virtual bool JumpToEndProcessing(StateMachineContext ctx);
+	virtual bool JumpToBeginProcessing(StateMachineContext ctx);
+
+};
+
+//
 // DataDecoder decodes sequence of pulses into binary data
 //
 
@@ -56,18 +99,9 @@ class DataDecoder
 public:
 	DataDecoder();
 	void ProcessSignal(bool state);
-	void ProcessPulse(const Pulse& pulse);
-	void SetDecodeCB(SignalMatchedFptr cb) { matched_cb = cb; }
+	void SetDecodeCB(SignalMatchedFptr cb) { m_dec_sm.SetDecodeCB(cb); }
 private:
-	void ResetDecoder();
-	pulse_dec_state state;
-	uint16_t bits_read;
-	union pulse_data
-	{
-		char chars[4];
-		uint32_t data;
-	}data_un;
-
+	DecoderStateMachine m_dec_sm;
 	PulseDecoder m_decoder;
 	SignalMatchedFptr matched_cb;
 };
