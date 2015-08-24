@@ -8,6 +8,7 @@
 
 namespace irRemote
 {
+
 typedef void (*SignalMatchedFptr)(void*);
 
 enum IRDataState
@@ -30,6 +31,11 @@ public:
 	uint16_t one_length;
 	uint16_t zero_length;
 };
+// TODO: move this to separate file
+const class Pulse THOMSON_START_PULSE =     {200, 200};
+const class Pulse THOMSON_DATA_ONE_PULSE =  {25, 100};
+const class Pulse THOMSON_DATA_ZERO_PULSE = {25, 50};
+const class Pulse THOMSON_END_PULSE =       {25, 445};
 
 bool operator ==(const Pulse &one, const Pulse& other);
 
@@ -51,7 +57,11 @@ public:
 //
 
 typedef void* StateMachineContext;
-
+typedef union pulse_data
+	{
+		char chars[4];
+		uint32_t data;
+	} PulseData;
 class RCProtocolStateMachine
 {
 public:
@@ -63,6 +73,7 @@ protected:
 	virtual bool JumpToEndProcessing(StateMachineContext ctx) { return false; };
 	virtual bool JumpToBeginProcessing(StateMachineContext ctx) { return false; };
 	uint16_t bits_read;
+	IRDataState GetState() { return m_state; };
 private:
 	IRDataState m_state;
 };
@@ -77,11 +88,7 @@ public:
 	void ResetState();
 	
 private:
-	union pulse_data
-	{
-		char chars[4];
-		uint32_t data;
-	}data_un;
+	PulseData data_un;
 	SignalMatchedFptr matched_cb;
 
 	virtual bool JumpToDataProcessing(StateMachineContext ctx);

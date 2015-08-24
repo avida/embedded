@@ -3,7 +3,6 @@
 
 namespace gpio
 {
-
    typedef uint8_t PinDescriptor;
    enum Port
    {

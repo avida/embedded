@@ -30,16 +30,9 @@ void printPulses(PulseStorage *ps)
 }
 
 #endif
-/*
 
-*/
 namespace irRemote
 {
-
-const class Pulse THOMSON_START_PULSE =     {200, 200};
-const class Pulse THOMSON_DATA_ONE_PULSE =  {25, 100};
-const class Pulse THOMSON_DATA_ZERO_PULSE = {25, 50};
-const class Pulse THOMSON_END_PULSE =       {25, 445};
 
 Pulse::Pulse(): one_length(2), zero_length(2)
 {}
@@ -186,63 +179,7 @@ DataDecoder::DataDecoder()
 {
 //	ResetDecoder();
 }
-/*
-void DataDecoder::ResetDecoder()
-{
-	state = ProcessingBegin;
-	bits_read = 0;
-	data_un.chars[0] = 0;
-	data_un.chars[1] = 0;
-	data_un.chars[2] = 0;
-	data_un.chars[3] = 0;
-}
-*/
-/*
-void DataDecoder::ProcessPulse(const Pulse& pulse)
-{
-	switch (state)
-	{
-	case ProcessingBegin:
-		if (THOMSON_START_PULSE == pulse)
-		{
-			state = ProcessingData;
-		}
-		break;
-	case ProcessingData:
-		if (THOMSON_DATA_ONE_PULSE == pulse)
-		{
-			*(data_un.chars + (bits_read >> 3))  |= 1 << (bits_read & 0x7);
-			bits_read++;
-		}
-		else if (THOMSON_DATA_ZERO_PULSE == pulse)
-		{
-			bits_read++;
-		}
-		else
-		{
-			ResetDecoder();
-		}
-		if (bits_read == 24)
-		{
-			state = ProcessingEnd;
-		}
-		break;
-	case ProcessingEnd:
-		if (THOMSON_END_PULSE == pulse)
-		{
-			if (matched_cb)
-				matched_cb((char *)&data_un.data);
-			state = ProcessingBegin;
-		}
-		ResetDecoder();
-		break;
-	default:
-		ResetDecoder();
-		break;
-	}
 
-}
-*/
 void DataDecoder::ProcessSignal(bool state)
 {
 	if (m_decoder.ProcessSignal(state))

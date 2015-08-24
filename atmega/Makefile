@@ -4,7 +4,7 @@ F_CPU = 16000000
 
 COMMON_DIR = ../common
 SOURCES = main.c uart.c gpio.c
-COMMON_SOURCES = rc_decoder/rc_decoder.c
+COMMON_SOURCES = rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c
 DIRS = 
 #Compiler flags
 CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328

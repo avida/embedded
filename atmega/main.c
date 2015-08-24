@@ -7,6 +7,7 @@
 #include <uart.h>
 #include "rc_decoder/rc_decoder.h"
 #include "gpio.h"
+#include <rc_decoder/rc_transmitter.h>
 //dccduino ->   gpio
 // D0-7 = PD0-7
 // D8-13 = PB0-5
