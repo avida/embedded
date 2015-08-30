@@ -71,26 +71,26 @@ void setupPin(PinDescriptor pin, bool input)
    GPIO_Init(getGPIOStruct(port), &GPIO_InitStructure);
 }
 
-Pin::Pin(Port port, uint8_t number)
+BasePin::BasePin(Port port, uint8_t number)
 {
    m_pin_desc = getPinDescriptor(port, number);
 }
 
 char str[80];
 
-Pin::operator bool() const
+BasePin::operator bool() const
 {
    Port port = (Port) (m_pin_desc >> 4);
    auto pin = m_pin_desc & 0x0f;
    return !(getGPIOStruct(port)->IDR & 1<<pin);
 }
 
-PinOutput::PinOutput(Port port, uint8_t number): Pin(port, number)
+PinOutput::PinOutput(Port port, uint8_t number): BasePin(port, number)
 {
    setupPin(m_pin_desc, false);
 }
 
-PinInput::PinInput(Port port, uint8_t number): Pin(port, number)
+PinInput::PinInput(Port port, uint8_t number): BasePin(port, number)
 {
    setupPin(m_pin_desc, true);
 }

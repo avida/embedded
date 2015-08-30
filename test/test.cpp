@@ -1,11 +1,14 @@
+#define BOOST_TEST_MODULE main test
 #include <iostream>
-#include <gpio.h>
+#include "gpio_mock.h"
+#include <boost/test/unit_test.hpp>
 
-gpio::PinOutput ledPin(gpio::B, 5);
+gpio::TestPinOutput ledPin;
 
-int main()
+BOOST_AUTO_TEST_CASE(first_test)
 {
-   ledPin = true;
-   ledPin = !ledPin;
    std::cout<< "It works" << std::endl;
+   BOOST_CHECK(!ledPin);
+   ledPin = true;
+   BOOST_CHECK(ledPin);
 }

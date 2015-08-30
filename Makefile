@@ -13,9 +13,10 @@ stm:
 CC = x86_64-w64-mingw32-g++.exe
 COMMON_DIR = common
 COMMON_SOURCES = rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c
-INCLUDES= -I$(COMMON_DIR)
-CFLAGS = -g -std=c++11
+INCLUDES= -I$(COMMON_DIR) -IG:\boost_1_57_0 -LG:\boost_1_57_0\stage\lib 
+CFLAGS = -g -std=c++11 
 CFLAGS += $(INCLUDES)
+LIBS = -lboost_unit_test_framework-mgw47-mt-1_57
 TEST_DIR = test
 OBJ_DIR = $(TEST_DIR)/obj
 
@@ -23,6 +24,7 @@ COMMON_OBJS = $(patsubst %.c, $(OBJ_DIR)/$(COMMON_DIR)/%.o, $(COMMON_SOURCES))
 DIRS = $(dir $(COMMON_OBJS))
 SOURCES = test.cpp gpio_mock.cpp
 OBJS = $(patsubst %cpp, $(OBJ_DIR)/%o, $(SOURCES))
+
 unittest: 
 	mkdir -p $(DIRS)
 	echo $(OBJS)
@@ -31,7 +33,7 @@ unittest:
 unittest-exe: test.exe
 
 test.exe: $(COMMON_OBJS) $(OBJS)
-	$(CC) $(CFLAGS) $(COMMON_OBJS) $(OBJS) -o $@
+	$(CC) $(CFLAGS) $(COMMON_OBJS) $(OBJS) $(LIBS) -o $@
 
 $(OBJ_DIR)/%.o: $(TEST_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@	

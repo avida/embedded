@@ -12,24 +12,35 @@ namespace gpio
       D,
       E
    };
-
-   class Pin
+   class IPin
    {
    public:
-      Pin(Port port, uint8_t number);
-      operator bool() const;
+      //virtual ~IPin() {};
+      virtual operator bool() const{};
+   };
+   class IPinOutput: public virtual IPin
+   {
+   public:
+      IPinOutput& operator= (bool val);
+   };
+//---
+   class BasePin: public virtual IPin
+   {
+   public:
+      BasePin(Port port, uint8_t number);
+      virtual operator bool() const;
    protected:
       PinDescriptor m_pin_desc;
    };
 
-   class PinOutput: public Pin
+   class PinOutput: public BasePin, public IPinOutput
    {
    public:
       PinOutput(Port port, uint8_t number);
-      PinOutput& operator= (bool val);
+      virtual PinOutput& operator= (bool val);
    };
 
-   class PinInput: public Pin
+   class PinInput: public BasePin
    {
    public:
       PinInput(Port port, uint8_t number);

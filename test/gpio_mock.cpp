@@ -1,21 +1,25 @@
-#include <gpio.h>
+#include "gpio_mock.h"
 #include <iostream>
 
 namespace gpio
 {
 
-Pin::Pin(Port port, uint8_t number) {}
+TestPinOutput::TestPinOutput(): m_state(false) {}
 
-PinOutput::PinOutput(Port port, uint8_t number): Pin(port, number) {}
-
-Pin::operator bool() const
+TestPinOutput::operator bool() const
 {
-   return true;
+   return m_state;
 }
 
-PinOutput& PinOutput::operator =(bool val)
+TestPinOutput& TestPinOutput::operator =(bool val)
 {
-   std::cout << (val ? "true" : "false") << std::endl;
+   m_state = val;
    return *this;
 }
+
+PinOutput::PinOutput(Port port, uint8_t number):BasePin(port, number) {}
+BasePin::BasePin(Port port, uint8_t number){}
+PinOutput& PinOutput::operator =(bool val){}
+BasePin::operator bool() const {}
+
 }

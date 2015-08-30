@@ -96,22 +96,22 @@ void setPinState(PinDescriptor pin, bool state)
    *port = (state ? 1 : 0) << (pin & 0x0f); 
 }
 
-Pin::Pin(Port port, uint8_t number)
+BasePin::BasePin(Port port, uint8_t number)
 {
    m_pin_desc = getPinDescriptor(port, number);
 }
 
-Pin::operator bool() const
+BasePin::operator bool() const
 {
    return getPinState(m_pin_desc);
 }
 
-PinOutput::PinOutput(Port port, uint8_t number): Pin(port, number)
+PinOutput::PinOutput(Port port, uint8_t number): BasePin(port, number)
 {
    setupForOutput(m_pin_desc);
 }
 
-PinInput::PinInput(Port port, uint8_t number): Pin(port, number)
+PinInput::PinInput(Port port, uint8_t number): BasePin(port, number)
 {
    setupForInput(m_pin_desc);
 }
