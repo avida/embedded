@@ -13,6 +13,7 @@ TestPinOutput::operator bool() const
 
 TestPinOutput& TestPinOutput::operator =(bool val)
 {
+   std::cout << (val ? "^":"_");
    m_state = val;
    return *this;
 }

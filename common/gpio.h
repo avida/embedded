@@ -21,7 +21,7 @@ namespace gpio
    class IPinOutput: public virtual IPin
    {
    public:
-      IPinOutput& operator= (bool val);
+      virtual IPinOutput& operator= (bool val){};
    };
 //---
    class BasePin: public virtual IPin

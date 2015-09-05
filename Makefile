@@ -22,7 +22,7 @@ OBJ_DIR = $(TEST_DIR)/obj
 
 COMMON_OBJS = $(patsubst %.c, $(OBJ_DIR)/$(COMMON_DIR)/%.o, $(COMMON_SOURCES))
 DIRS = $(dir $(COMMON_OBJS))
-SOURCES = test.cpp gpio_mock.cpp
+SOURCES = test.cpp gpio_mock.cpp uart.cpp
 OBJS = $(patsubst %cpp, $(OBJ_DIR)/%o, $(SOURCES))
 
 unittest: 

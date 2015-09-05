@@ -8,7 +8,7 @@ namespace irRemote
 class PulseTransmitter
 {
 public:
-   PulseTransmitter(gpio::PinOutput& pin):m_pin(pin)
+   PulseTransmitter(gpio::IPinOutput& pin):m_pin(pin), current_pulse(0)
    {}
    // return true transmission completed
    // otherwise return false
@@ -22,15 +22,16 @@ public:
 private:
    uint16_t m_time_pointer;
    const Pulse* current_pulse;
-   gpio::PinOutput m_pin;
+   gpio::IPinOutput& m_pin;
 };
 
 class RCTransmiterMachine: public RCProtocolStateMachine
 {
 public:
-   RCTransmiterMachine();
+   RCTransmiterMachine(gpio::IPinOutput& pin);
    void SetData(const PulseData& data);
    void OnTimerEvent();
+   bool IsDone() {return m_done;}
 protected:
    PulseTransmitter m_transmitter;
    const PulseData* m_data;
@@ -44,7 +45,7 @@ protected:
 class RCTransmitter
 {
 public:
-   RCTransmitter(gpio::PinOutput& out);
+   RCTransmitter(gpio::IPinOutput& out);
    void StartTransmit(const PulseData& data);
    bool DoStep();
 private:

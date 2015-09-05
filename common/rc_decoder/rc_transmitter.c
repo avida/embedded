@@ -7,21 +7,28 @@ namespace irRemote
 
 bool PulseTransmitter::OnTimerEvent()
 {
-   if (m_time_pointer >= current_pulse->one_length + current_pulse->zero_length)
+   if(current_pulse == 0)
+      return false;
+   if (m_time_pointer > current_pulse->one_length + current_pulse->zero_length)
    {
       return true;
    }
-   m_pin = m_time_pointer <= current_pulse->one_length;
-   return false;
+   m_pin = m_time_pointer++ <= current_pulse->one_length;
+   return m_time_pointer > current_pulse->one_length + current_pulse->zero_length;
 }
 
 bool PulseTransmitter::TransmissionInProgress()
 {
-   return m_time_pointer < current_pulse->one_length + current_pulse->zero_length;
+   if(current_pulse == 0)
+      return false;
+   return m_time_pointer <= current_pulse->one_length + current_pulse->zero_length;
 }
 
 // RCTransmiterMachine implementation
+RCTransmiterMachine::RCTransmiterMachine(gpio::IPinOutput& pin): m_transmitter(pin), m_done(false)
+{
 
+}
 bool RCTransmiterMachine::JumpToDataProcessing(StateMachineContext ctx)
 {
    if (m_transmitter.OnTimerEvent())
@@ -47,6 +54,7 @@ bool RCTransmiterMachine::JumpToBeginProcessing(StateMachineContext ctx)
    if (m_transmitter.OnTimerEvent())
    {
       // finished
+      m_done = true;
       return true;
    }
    return false;
@@ -64,8 +72,8 @@ void RCTransmiterMachine::OnTimerEvent()
          break;
          case ProcessingData:
          {
-            auto ch =  bits_read >> 8;
-            auto index = bits_read & 0xff;
+            auto ch =  bits_read >> 3;
+            auto index = bits_read & 0x7;
             if (m_data->chars[ch] & (1 << index))
             {
                m_transmitter.SetPulse(THOMSON_DATA_ONE_PULSE);
@@ -88,16 +96,25 @@ void RCTransmiterMachine::OnTimerEvent()
 
 void RCTransmiterMachine::SetData(const PulseData& data)
 {
+   m_done = false;
    m_data = &data;
    ResetState();
 }
 
 //RCTransmitter
 
+RCTransmitter::RCTransmitter(gpio::IPinOutput& pin):m_machine(pin)
+{}
+
+void RCTransmitter::StartTransmit(const PulseData& data)
+{
+   m_machine.SetData(data);
+}
+
 bool RCTransmitter::DoStep()
 {
    m_machine.OnTimerEvent();
-   return true;
+   return m_machine.IsDone();
 }
 
 }

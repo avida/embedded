@@ -1,6 +1,6 @@
 #include "rc_decoder.h"
 
-//#define RC_DEBUG
+#define RC_DEBUG
 
 static uint16_t pulse_tolerance = 20;
 //debug only 
