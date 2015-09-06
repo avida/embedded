@@ -29,13 +29,13 @@ void setupPort(PinDescriptor port, Operation op)
    switch(port >> 4)
    {
       case B:
-         DDRB = op << port_number;
+         DDRB = op ? (DDRB | op << port_number) : (DDRB & ~(op << port_number));
          break;
       case C:
-         DDRC = op << port_number;
+         DDRC = op ? (DDRC | op << port_number) : (DDRC & ~(op << port_number));
          break;
       case D:
-         DDRD = op << port_number;
+         DDRD = op ? (DDRD | op << port_number) : (DDRD & ~(op << port_number));
          break;
       case E:
       case A:
