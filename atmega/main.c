@@ -16,22 +16,17 @@
 // A0-5 -> PC0-5
 // A6-7 = ADC6-7
 //#define F_CPU 16000000UL
+gpio::PinInput irPin(gpio::D, 3);
+gpio::PinOutput lampPin(gpio::D, 4);
 
-gpio::PinOutput ledPin(gpio::B, 5);
-gpio::PinInput pd6(gpio::D, 6 );
-gpio::PWMRCPin pwmPin(38);
-
-gpio::PinInput pd4(gpio::D, 4);
-//irRemote::RCTransmitter transmitter(pd4);
-
-uart::UART serial;
-
-char str[80];
 void onDecode (void* d)
 {
-   char* data = (char *)d;
-   sprintf(str, "decoded: %02x%02x%02x\n", *(data+2), *(data+1), *data );
-   serial << str;
+  auto data = (uint32_t *)d;
+   if (*data == 0xe8017f)
+   {
+      lampPin = !lampPin;
+      _delay_ms(500);
+   }
 }
 
 void setupTimer()
@@ -42,33 +37,22 @@ void setupTimer()
    TCCR0B |= 1 << CS01;
    
    // 40 ticks = 20 us on 2Mhz timer
-   OCR0A = 80;
+   OCR0A = 40;
    // enable interrupts
    TIMSK0 |= (1 << OCIE0A);
    sei();
 }
 
 irRemote::DataDecoder ir_decoder;
-int cnt = 0;
 ISR (TIMER0_COMPA_vect)  
 {
-  ir_decoder.ProcessSignal(pd4);
-  //transmitter.DoStep();
+  ir_decoder.ProcessSignal(!irPin);
 }
-//gpio::PinOutput pin3(gpio::D, 3 );
 
 int main(void) {
+  lampPin = true;
   ir_decoder.SetDecodeCB(onDecode);
-  serial << "Privet\n";
-  irRemote::PulseData data;
-  data.data  = 0x00deadbf;
- 
-  //transmitter.StartTransmit(data);
   setupTimer();
-  //ledPin = true;
-   while (1)
-   {
-      //_delay_us(20);
-   }
+   while (1);
    return 0;    
 }
