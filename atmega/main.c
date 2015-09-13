@@ -50,7 +50,7 @@ ISR (TIMER0_COMPA_vect)
 }
 
 int main(void) {
-  lampPin = true;
+  lampPin = false;
   ir_decoder.SetDecodeCB(onDecode);
   setupTimer();
    while (1);
