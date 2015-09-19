@@ -18,6 +18,7 @@ namespace gpio
       //virtual ~IPin() {};
       virtual operator bool() const{};
    };
+
    class IPinOutput: public virtual IPin
    {
    public:
@@ -38,6 +39,7 @@ namespace gpio
    public:
       PinOutput(Port port, uint8_t number);
       virtual PinOutput& operator= (bool val);
+      PinOutput& operator= (const PinOutput  &other ) { *this = (bool)other; };
    };
 
    class PinInput: public BasePin

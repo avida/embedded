@@ -93,7 +93,10 @@ bool getPinState(PinDescriptor pin)
 void setPinState(PinDescriptor pin, bool state)
 {
    auto port = getPort(pin);
-   *port = (state ? 1 : 0) << (pin & 0x0f); 
+   if (state)
+      *port = *port | 1 << (pin & 0x0f); 
+   else
+      *port = *port & ~(1 << (pin & 0x0f)); 
 }
 
 BasePin::BasePin(Port port, uint8_t number)
