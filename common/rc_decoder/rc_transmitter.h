@@ -21,8 +21,8 @@ public:
    }
 private:
    uint16_t m_time_pointer;
-   const Pulse* current_pulse;
    gpio::IPinOutput& m_pin;
+   const Pulse* current_pulse;
 };
 
 class RCTransmiterMachine: public RCProtocolStateMachine
@@ -52,5 +52,4 @@ private:
    RCTransmiterMachine m_machine;
 
 };
-
 }

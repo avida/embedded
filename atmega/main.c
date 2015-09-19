@@ -42,7 +42,7 @@ void setupTimer()
    TCCR0B |= 1 << CS01;
    
    // 40 ticks = 20 us on 2Mhz timer
-   OCR0A = 80;
+   OCR0A = 40;
    // enable interrupts
    TIMSK0 |= (1 << OCIE0A);
    sei();
@@ -52,7 +52,7 @@ irRemote::DataDecoder ir_decoder;
 int cnt = 0;
 ISR (TIMER0_COMPA_vect)  
 {
-  ir_decoder.ProcessSignal(pd4);
+  ir_decoder.ProcessSignal(!pd4);
   //transmitter.DoStep();
 }
 //gpio::PinOutput pin3(gpio::D, 3 );
@@ -68,7 +68,7 @@ int main(void) {
   //ledPin = true;
    while (1)
    {
-      //_delay_us(20);
+      ledPin = !pd4;
    }
    return 0;    
 }

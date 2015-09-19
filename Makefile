@@ -12,7 +12,7 @@ stm:
 
 CC = x86_64-w64-mingw32-g++.exe
 COMMON_DIR = common
-COMMON_SOURCES = rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c
+COMMON_SOURCES = rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c rc_decoder/rc_state_machine.c
 INCLUDES= -I$(COMMON_DIR) -IG:\boost_1_57_0 -LG:\boost_1_57_0\stage\lib 
 CFLAGS = -g -std=c++11 
 CFLAGS += $(INCLUDES)

@@ -68,7 +68,7 @@ void RCTransmiterMachine::OnTimerEvent()
       switch(GetState())
       {
          case ProcessingBegin:
-            m_transmitter.SetPulse(THOMSON_START_PULSE);
+            m_transmitter.SetPulse(START_PULSE);
          break;
          case ProcessingData:
          {
@@ -76,16 +76,16 @@ void RCTransmiterMachine::OnTimerEvent()
             auto index = bits_read & 0x7;
             if (m_data->chars[ch] & (1 << index))
             {
-               m_transmitter.SetPulse(THOMSON_DATA_ONE_PULSE);
+               m_transmitter.SetPulse(DATA_ONE_PULSE);
             }
             else
             {
-               m_transmitter.SetPulse(THOMSON_DATA_ZERO_PULSE);
+               m_transmitter.SetPulse(DATA_ZERO_PULSE);
             }
          }
          break;
          case ProcessingEnd:
-            m_transmitter.SetPulse(THOMSON_END_PULSE);
+            m_transmitter.SetPulse(END_PULSE);
          break;
          default:
          break;
