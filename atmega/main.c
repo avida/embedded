@@ -18,20 +18,83 @@
 //#define F_CPU 16000000UL
 
 gpio::PinOutput ledPin(gpio::B, 5);
-gpio::PinInput pd6(gpio::D, 6 );
 gpio::PWMRCPin pwmPin(38);
 
 gpio::PinInput pd4(gpio::D, 4);
-//irRemote::RCTransmitter transmitter(pd4);
 
 uart::UART serial;
 
 char str[80];
+
+class Lamp
+{
+public:
+    Lamp():sock1(gpio::D, 5),
+           sock2(gpio::D, 6),
+           m_lamp_state(Half)
+  {
+    AdjustLampState();
+  }
+
+  void SwitchNext()
+  {
+    m_lamp_state +=1;
+    if (m_lamp_state > Full)
+    {
+      m_lamp_state = Off;
+    }
+    AdjustLampState();
+  }
+
+  void SwitchOff()
+  {
+    m_lamp_state = Off;
+    AdjustLampState();
+  }
+private:
+  enum LampState
+  {
+    Off = 0,
+    Half,
+    Full
+  };
+
+  void AdjustLampState()
+  {
+    switch(m_lamp_state)
+    {
+      case Off:
+        sock1 = sock2 = true;
+        break;
+      case Half:
+        sock1 = true;
+        sock2 = false;
+        break;
+      case Full:
+        sock1 = sock2 = false;
+        break;
+    }
+  }
+  gpio::PinOutput sock1;
+  gpio::PinOutput sock2;  
+  int m_lamp_state;
+} lamp;
+
+uint32_t sony_red_button_code = 0x000ba5;
+uint32_t sony_green_button_code = 0x000ba6;
+
 void onDecode (void* d)
 {
    char* data = (char *)d;
-   sprintf(str, "decoded: %02x%02x%02x\n", *(data+2), *(data+1), *data );
-   serial << str;
+   if ( *((uint32_t*)data) == sony_red_button_code)
+   {
+      lamp.SwitchNext();
+      _delay_ms(500);
+   }
+   else if (*((uint32_t*)data) == sony_green_button_code)
+   {
+      lamp.SwitchOff();
+   }
 }
 
 void setupTimer()
@@ -59,16 +122,8 @@ ISR (TIMER0_COMPA_vect)
 
 int main(void) {
   ir_decoder.SetDecodeCB(onDecode);
-  serial << "Privet\n";
   irRemote::PulseData data;
-  data.data  = 0x00deadbf;
- 
-  //transmitter.StartTransmit(data);
   setupTimer();
-  //ledPin = true;
-   while (1)
-   {
-      ledPin = !pd4;
-   }
-   return 0;    
+   while (1);
+   return 0;
 }

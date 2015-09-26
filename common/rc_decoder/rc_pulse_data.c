@@ -3,7 +3,7 @@
 namespace irRemote
 {
 
-#define THOMSON
+#define SONY
 
 #ifdef THOMSON
 uint16_t bits_per_signal = 24;
