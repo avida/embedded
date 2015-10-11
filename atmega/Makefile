@@ -3,7 +3,7 @@ AVR-OC = avr-objcopy
 F_CPU = 16000000
 
 COMMON_DIR = ../common
-SOURCES = main.c uart.c gpio.c pwm_rc_pin.c
+SOURCES = main.c uart.c pwm_rc_pin.c utils.c atmega_pin.c dht11.c
 COMMON_SOURCES = rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c
 DIRS = 
 #Compiler flags

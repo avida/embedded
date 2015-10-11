@@ -1,6 +1,14 @@
 #include <gpio.h>
 #include <avr/io.h>
 
+#define DHT11_DEBUG
+#ifdef DHT11_DEBUG
+
+#include <uart.h>
+#include <stdio.h>
+extern uart::UART serial;
+
+#endif
 namespace gpio
 {
 
@@ -29,29 +37,19 @@ void setupPort(PinDescriptor port, Operation op)
    switch(port >> 4)
    {
       case B:
-         DDRB = op ? (DDRB | op << port_number) : (DDRB & ~(op << port_number));
+         DDRB = op ? (DDRB | op << port_number) : (DDRB & ~(1 << port_number));
          break;
       case C:
-         DDRC = op ? (DDRC | op << port_number) : (DDRC & ~(op << port_number));
+         DDRC = op ? (DDRC | op << port_number) : (DDRC & ~(1 << port_number));
          break;
       case D:
-         DDRD = op ? (DDRD | op << port_number) : (DDRD & ~(op << port_number));
+         DDRD = op ? (DDRD | op << port_number) : (DDRD & ~(1 << port_number));
          break;
       case E:
       case A:
       default:
          break;
    }
-}
-
-void setupForInput(PinDescriptor port)
-{
-   setupPort(port, Input);
-}
-
-void setupForOutput(PinDescriptor port)
-{
-   setupPort(port, Output);
 }
 
 volatile uint8_t *getPort(PinDescriptor port)
@@ -111,12 +109,12 @@ BasePin::operator bool() const
 
 PinOutput::PinOutput(Port port, uint8_t number): BasePin(port, number)
 {
-   setupForOutput(m_pin_desc);
+   setupPort(port, Output);
 }
 
 PinInput::PinInput(Port port, uint8_t number): BasePin(port, number)
 {
-   setupForInput(m_pin_desc);
+   setupPort(port, Input);
 }
 
 PinOutput& PinOutput::operator =(bool val)

@@ -3,10 +3,12 @@
 #define BAUD 115200
 #include <avr/io.h>
 #include <util/setbaud.h>
+#include <stdio.h>
 
 namespace uart
 {
 
+char tmp[10];
 void uart_init(void) {
     UBRR0H = UBRRH_VALUE;
     UBRR0L = UBRRL_VALUE;
@@ -39,9 +41,16 @@ UART::UART()
 {
   uart_init(); 
 }
+
 UART& UART::operator << (const char * str)
 {
   putString (str);
+}
+
+UART& UART::operator << (int num)
+{
+  sprintf(tmp, "%d", num);
+  putString (tmp);
 }
 
 }

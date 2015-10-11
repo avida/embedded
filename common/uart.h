@@ -6,6 +6,7 @@ namespace uart
    {
    public:
       UART();
-      UART& operator << (const char * str);
+      UART& operator << (const char *);
+      UART& operator << (int);
    };
 }
