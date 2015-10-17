@@ -9,6 +9,7 @@
 #include <rc_decoder/rc_transmitter.h>
 #include "pwm_rc_pin.h"
 #include "dht11.h"
+#include <util/delay.h>
 //dccduino ->   gpio
 // D0-7 = PD0-7
 // D8-13 = PB0-5
@@ -56,13 +57,26 @@ ISR (TIMER0_COMPA_vect)
 //gpio::PinOutput pin3(gpio::D, 3 );
 
 int main(void) {
-  ir_decoder.SetDecodeCB(onDecode);
-  serial << "Privet\n";
-  //transmitter.StartTransmit(data);
-  //setupTimer();
-  //ledPin = true;
-  sensors::DHT11 dht(gpio::D, 2);
-  dht.ReadData();
+   ir_decoder.SetDecodeCB(onDecode);
+   serial << "Privet\n";
+   //transmitter.StartTransmit(data);
+   //setupTimer();
+   //ledPin = true;
+   sensors::DHT11 dht(gpio::D, 2);
+   while (1)
+   {
+      if (dht.ReadData())
+      {
+         serial << "humidity: " << dht.GetHumidity()
+                << "\n temp: "  << dht.GetTemperature()  << "\n";
+
+      }
+      else
+      {
+         serial << "error reading sensor data\n";
+      }
+      _delay_ms(5000);
+   }
    while (1)
    {
       ledPin = !pd4;
