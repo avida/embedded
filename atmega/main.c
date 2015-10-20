@@ -9,6 +9,7 @@
 #include <rc_decoder/rc_transmitter.h>
 #include "pwm_rc_pin.h"
 #include "dht11.h"
+#include <PCD8544.h>
 #include <util/delay.h>
 //dccduino ->   gpio
 // D0-7 = PD0-7
@@ -25,7 +26,7 @@ gpio::Pin pd4(gpio::D, 4);
 
 uart::UART serial;
 
-char str[80];
+char str[60];
 void onDecode (void* d)
 {
    char* data = (char *)d;
@@ -56,12 +57,8 @@ ISR (TIMER0_COMPA_vect)
 }
 //gpio::PinOutput pin3(gpio::D, 3 );
 
-int main(void) {
-   ir_decoder.SetDecodeCB(onDecode);
-   serial << "Privet\n";
-   //transmitter.StartTransmit(data);
-   //setupTimer();
-   //ledPin = true;
+void testDHT()
+{
    sensors::DHT11 dht(gpio::D, 2);
    while (1)
    {
@@ -77,6 +74,29 @@ int main(void) {
       }
       _delay_ms(5000);
    }
+}
+
+void testLCD()
+{
+   gpio::Pin rst(gpio::D, 2);
+   gpio::Pin light(gpio::D, 3);
+   gpio::Pin ce(gpio::D, 4);
+   gpio::Pin dc(gpio::D, 5);
+   gpio::Pin din(gpio::D, 6);
+   gpio::Pin clk(gpio::D, 7);
+   lcd::PCD8544 lcd( rst, ce, dc, din, clk, light);
+   lcd.Awesome();
+   while(1);
+}
+
+int main(void) {
+   ir_decoder.SetDecodeCB(onDecode);
+   serial << "Privet\n";
+   // testDHT();
+   //transmitter.StartTransmit(data);
+   //setupTimer();
+   //ledPin = true;
+   testLCD();
    while (1)
    {
       ledPin = !pd4;

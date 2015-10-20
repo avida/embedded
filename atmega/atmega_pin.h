@@ -4,11 +4,20 @@
 
 namespace gpio
 {
+   class PinIn : public IPinInput
+   {
+
+   };
+   class PinOut : public IPinOutput
+   {
+
+   };
+
    class Pin: public IPinInOut
    {
       public:
       Pin(Port port, uint8_t number);
-      Pin& operator= (bool val);
+      virtual Pin& operator= (bool val);
       void SetToInput();
       void SetToOutput();
       virtual operator bool() const;

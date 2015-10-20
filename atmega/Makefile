@@ -4,7 +4,7 @@ F_CPU = 16000000
 
 COMMON_DIR = ../common
 SOURCES = main.c uart.c pwm_rc_pin.c utils.c atmega_pin.c dht11.c
-COMMON_SOURCES = rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c
+COMMON_SOURCES = rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c PCD8544.c
 DIRS = 
 #Compiler flags
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
