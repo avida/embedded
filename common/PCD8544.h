@@ -22,7 +22,11 @@ public:
    void SetByte(char byte, uint8_t y);
    void SendByte(char byte);
    void SendCommand(char command);
-   void Awesome();
+   void GotoXY(int x, int y);
+   void DrawChar(char c);
+   void DrawLine(const char* line);
+   void DrawBitmap(const char* bitmap, int size);
+   void Clear();
 private:
    void SendDataOrCommand(bool is_data, char data);
    gpio::IPinOutput &rst, &ce, &dc, &din, &clk, &light;
