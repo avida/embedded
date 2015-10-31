@@ -10,6 +10,7 @@ COMMON_SOURCES =	\
 					  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
 					  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
 					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
+					  rfid_reader.c\
 #					  PCDdata.c PCD8544.c \
 DIRS = 
 #Compiler flags
