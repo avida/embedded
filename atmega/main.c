@@ -30,8 +30,8 @@ uart::UART serial;
 #include "test_rfidreader.h"
 
 int main(void) {
-   serial << "Privet\n";
+   serial << "Hello\n";
    test_main();
-   serial << "Poka\n";
+   serial << "Bye bye\n";
    return 0;    
 }

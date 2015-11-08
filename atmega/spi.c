@@ -1,6 +1,8 @@
 #include <spi.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <uart.h>
+extern uart::UART serial;
 
 // SS = PB2 (PIN 10)
 // MOSI = PB3 (PIN 11)
@@ -13,6 +15,7 @@ namespace protocol
 SPI::SPI(gpio::IPinOutput* control_pin): m_control_pin(control_pin)
 {
    SetMaster(true);
+   *m_control_pin = true;
    sei();
 }
 
@@ -39,38 +42,34 @@ void SPI::SetMaster(bool master)
       SPCR = (1<<SPE);
    }
 }
-char SPI::SendReceiveByte(char* byte)
+
+void SPI::TranseferBytes(char *bytes, int length)
 {
    if (m_control_pin)
       *m_control_pin = false;
-   if (byte)
+   while(length)
    {
-      SPDR = *byte;
+      SPDR = *bytes;
+      while(!(SPSR & (1 <<SPIF)));
+      *bytes = SPDR;
+      bytes++;
+      length--;
    }
-   while(!(SPSR & (1 <<SPIF)));
    if (m_control_pin)
       *m_control_pin = true;
-   return SPDR;
 }
 
 void SPI::SendByte(char byte)
-{
-   if (!m_control_pin)
-      return;
-   *m_control_pin = false;
-   SPDR = byte;
-   while(!(SPSR & (1 <<SPIF)));
-   *m_control_pin = true;
+{ 
+   char bt = byte;
+   TranseferBytes(&bt, 1);
 }
 
 char SPI::ReceiveByte()
 {
-   if (!m_control_pin)
-      return 0;
-   *m_control_pin = false;
-   while(!(SPSR & (1 <<SPIF)));
-   return SPDR;
-   *m_control_pin = true;
+   char bt = 0;
+   TranseferBytes(&bt, 1);
+   return bt;
 }
 
 }

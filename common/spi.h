@@ -9,11 +9,11 @@ class SPI
 public:
    SPI(gpio::IPinOutput* m_control_pin);
    SPI();
-   void SetMaster(bool master);
-   char SendReceiveByte(char* byte);
    void SendByte(char byte);
-   char ReceiveByte();
+    char ReceiveByte();
    gpio::IPinOutput* m_control_pin;
+   void TranseferBytes(char *bytes, int length);
 private:
+   void SetMaster(bool master);
 };
 }
