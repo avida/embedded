@@ -33,5 +33,5 @@ void onDecode (void* d)
 void test_main()
 {
    setupTimer();
-    ir_decoder.SetDecodeCB(onDecode);   
+   ir_decoder.SetDecodeCB(onDecode);   
 }

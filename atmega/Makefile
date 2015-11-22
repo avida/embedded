@@ -4,13 +4,16 @@ F_CPU = 16000000
 
 COMMON_DIR = ../common
 
-SOURCES = main.c uart.c pwm_rc_pin.c utils.c atmega_pin.c dht11.c spi.c
+SOURCES = main.c uart.c pwm_rc_pin.c utils.c atmega_pin.c \
+			 dht11.c \
+			 spi.c \
+			 i2c.c \
 
 COMMON_SOURCES =	\
 					  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
 					  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
 					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
-					  rfid_reader.c\
+#					  rfid_reader.c\
 #					  PCDdata.c PCD8544.c \
 DIRS = 
 #Compiler flags
