@@ -36,6 +36,7 @@ I2C::I2C() {
    scl = true;
    TWSR = 0;
    TWBR = 0x0C;
+   TWCR = (1<<TWEN);
 }
 
 bool I2C::Transmit(uint8_t address, char* data, uint8_t len)

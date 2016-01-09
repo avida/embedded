@@ -2,7 +2,7 @@
 
 void test_main()
 {
-      char bt = 12;
+   char bt = 12;
    char bt2 = 24;
 #ifdef SPI_MASTER
    serial << "master\n";

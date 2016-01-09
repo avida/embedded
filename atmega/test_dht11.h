@@ -1,6 +1,6 @@
 void test_main()
 {
-   sensors::DHT11 dht(gpio::C, 6);
+   sensors::DHT11 dht(gpio::B, 3);
    while (1)
    {
       if (dht.ReadData())
