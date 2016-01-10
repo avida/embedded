@@ -1,5 +1,6 @@
 #include <device/NRF24L01.h>
 #include <spi.h>
+#include <util/delay.h>
 
 #define TEST_SEND
 
@@ -10,9 +11,19 @@ void test_send()
    gpio::Pin ce(gpio::B, 1);
    protocol::SPI spi(&cc);
    device::NRF24L01 nrf(spi, ce);
-   nrf.SetTXAddress(addr, 7);
+   //nrf.SetTXAddress(addr, 7);
    char *str = "Hello";
-   nrf.Transmit(str, 6);
+   nrf.Init();   
+   auto buff = nrf.GetBufferPtr();
+   buff[0] = 42;
+   nrf.Transmit(str, 10);
+   while(1)
+   {
+      auto status = nrf.ReadStatus();
+      serial << "status: " << status;
+      _delay_ms(1000);
+   }
+
 }
 
 void test_receive()
