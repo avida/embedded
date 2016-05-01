@@ -24,6 +24,7 @@ extern uart::UART serial;
 
 // status bits
 #define RX_DR_BIT 0b01000000
+#define TX_DS_BIT 0b00100000
 
 #define BUILD_WRITE_REG_CMD(reg) \
         (1 << 5) | reg
@@ -86,10 +87,10 @@ void NRF24L01::SetRXAddress(char* addr, int len, int pipe)
 
 }
 
-void NRF24L01::Listen()
+void NRF24L01::Listen(int packet_size)
 {
    auto status = buffer[0];
-   data_buffer[0] = 10;
+   data_buffer[0] = packet_size;
    WriteRegister(REG_RX_PW_P0);
    _delay_us(11);
    data_buffer[0] = RX_CONFIG;
@@ -99,26 +100,38 @@ void NRF24L01::Listen()
 
 int NRF24L01::Receive(int len)
 {
-   data_buffer[0] =  RX_DR_BIT;
+   // reset status bit
+   data_buffer[0] = RX_DR_BIT;
    WriteRegister(REG_STATUS);
+   // read data
    ExecuteCommand(R_RX_PAYLOAD, len);
    return buffer[0];
 }
 
-int NRF24L01::Transmit(char* buffer, int len)
+void NRF24L01::SetupTransmit()
 {
    // Go to TX mode
-   // fill up FIFO 
+   // fill up FIFO
    // and set PRIM_RX to 0
-   ExecuteCommand(R_TX_PAYLOAD, len);
-   auto status = buffer[0];
+   ExecuteCommand(R_TX_PAYLOAD, 1);
    data_buffer[0] = TX_CONFIG;
-   WriteRegister(REG_CONFIG, 1);
-   //m_CE = true;
-   _delay_us(11);
+   WriteRegister(REG_CONFIG);
+   m_CE = true;
+   _delay_us(10);
+   m_CE = false;
    _delay_us(130);
-   //m_CE = false;
-   return status;
+}
+
+void NRF24L01::Transmit(int len)
+{
+   ExecuteCommand(R_TX_PAYLOAD, len);
+}
+
+void NRF24L01::ResetTransmit()
+{
+   // reset status bit
+   data_buffer[0] =  TX_DS_BIT;
+   WriteRegister(REG_STATUS);
 }
 
 char NRF24L01::ReadStatus()

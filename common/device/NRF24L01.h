@@ -16,8 +16,10 @@ public:
    void SetTXAddress(char* addr, int len);
    void SetRXAddress(char* addr, int len, int pipe);
    int Receive(int len);
+   void SetupTransmit();
    void Listen(int packet_size);
-   int Transmit(char* buffer, int len);
+   void Transmit(int len);
+   void ResetTransmit();
    char* GetBufferPtr();
    char ReadStatus();
    int PayloadWidth();

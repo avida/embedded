@@ -6,7 +6,7 @@
 #define TEST_SEND
 
 char addr[] = {1,2,3,4,5,6,7};
-char *str = "Hello";
+char *str = "Hello0";
 void test_send()
 {
    gpio::Pin cc(gpio::B, 2);
@@ -15,16 +15,29 @@ void test_send()
    device::NRF24L01 nrf(spi, ce);
    //nrf.SetTXAddress(addr, 7);
    nrf.Init();
+   nrf.SetupTransmit();
    auto buff = nrf.GetBufferPtr();
-   strcpy(buff, str);
-   nrf.Transmit(str, strlen(str)+1);
-   auto len = strlen(str);
+   auto len = strlen(str)+1;
    serial << "len: " << len << "\n";
+   auto count = 1;
    while(1)
    {
       auto status = nrf.ReadStatus();
-      serial << "status: " << status << "\n";
+      serial << "status after: " << status << "\n";
+      nrf.ResetTransmit();
+      status = nrf.ReadStatus();
+      serial << "status before: " << status << "\n";
+      strcpy(buff, str);
+      serial << "transmit: " << buff << "\n";
+      nrf.Transmit(len);
       _delay_ms(1000);
+      str[5] = 48 + count;
+
+      if (++count > 9)
+
+      {
+         count = 0;
+      }
    }
 
 }
@@ -46,7 +59,7 @@ void test_receive()
       serial << "receive status: " << status << "\n";
       if (status == 64)
       {
-         int s = nrf.Receive(strlen(str)+1);
+         int s = nrf.Receive(pack_len);
          serial << "s: " << s << "\n"; 
          serial << "b: " << buf << "\n";
       }
