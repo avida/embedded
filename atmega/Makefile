@@ -1,7 +1,7 @@
 CC = avr-g++
 AVR-OC = avr-objcopy
 F_CPU = 16000000
-
+COM_PORT = COM5
 COMMON_DIR = ../common
 
 SOURCES = main.c uart.c pwm_rc_pin.c utils.c atmega_pin.c \
@@ -9,13 +9,13 @@ SOURCES = main.c uart.c pwm_rc_pin.c utils.c atmega_pin.c \
 			 spi.c \
 			 i2c.c \
 
-COMMON_SOURCES =	\
+COMMON_SOURCES =  \
 					  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
 					  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
 					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
 					  device/NRF24L01.c \
-#					  rfid_reader.c\
-#					  PCDdata.c PCD8544.c \
+#					 rfid_reader.c\
+#					 PCDdata.c PCD8544.c \
 DIRS = 
 #Compiler flags
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
@@ -36,7 +36,7 @@ OBJ_SUBDIRS = $(patsubst %, $(OBJDIR)/%, $(DIRS))
 OBJ_SUBDIRS += $(patsubst %, $(OBJDIR)/common/%, $(dir $(COMMON_SOURCES)))
 
 all:
-	mkdir -p $(OBJ_SUBDIRS) 
+	mkdir -p $(OBJ_SUBDIRS)
 	mingw32-make flash-m328 TARGET=m328
 
 m168:
@@ -44,10 +44,10 @@ m168:
 	mingw32-make flash-m168 TARGET=m168
 
 flash-m328: $(OBJDIR)/main.hex
-	avrdude -c avrisp -p atmega328p -P COM3 -b 57600 -U flash:w:$<
+	avrdude -c avrisp -p atmega328p -P $(COM_PORT) -b 57600 -U flash:w:$<
 
 flash-m168: $(OBJDIR)/main.hex
-	avrdude -c avrisp -p atmega168 -P COM3 -b 19200 -U flash:w:$<	
+	avrdude -c avrisp -p atmega168 -P $(COM_PORT) -b 19200 -U flash:w:$<  
 
 $(OBJDIR)/main.hex: $(OBJDIR)/main.elf
 	$(AVR-OC) -j .text -j .data  -O ihex $< $@

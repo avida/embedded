@@ -15,13 +15,15 @@ public:
    void Init();
    void SetTXAddress(char* addr, int len);
    void SetRXAddress(char* addr, int len, int pipe);
-   int Receive(char* buffer, int len, int pipe);
+   int Receive(int len);
+   void Listen(int packet_size);
    int Transmit(char* buffer, int len);
    char* GetBufferPtr();
    char ReadStatus();
+   int PayloadWidth();
 private:
-   void WriteRegister(int address, int len);
-   void ReadRegister(int address, int len);
+   void WriteRegister(int address, int len = 1);
+   void ReadRegister(int address, int len = 1);
    // Send write command with cmd name
    // len is length of bytes shoud be written in internal buffer
    void ExecuteCommand(char cmd, int len = 0);
