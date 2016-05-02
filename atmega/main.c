@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <uart.h>
 #include "atmega_pin.h"
-#include <rc_decoder/rc_transmitter.h>
-#include "pwm_rc_pin.h"
-#include "dht11.h"
+// #include <rc_decoder/rc_transmitter.h>
+// #include "pwm_rc_pin.h"
+// #include "dht11.h"
 #include <gpio.h>
 #include <util/delay.h>
 //dccduino ->   gpio
@@ -30,7 +30,9 @@ uart::UART serial;
 
 //#include "test_i2c.h"
 
-#include "test_nrf.h"
+//#include "test_nrf.h"
+
+#include "test_max7219.h"
 
 int main(void) {
    serial << "Hello\n";

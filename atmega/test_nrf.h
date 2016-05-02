@@ -5,6 +5,12 @@
 
 #define TEST_SEND
 
+// CE => D9
+// CSN => D10
+// MOSI => D11
+// SCK => D13
+// MISO => D12
+
 char addr[] = {1,2,3,4,5,6,7};
 char *str = "Hello0";
 void test_send()

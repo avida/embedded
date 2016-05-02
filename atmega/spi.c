@@ -30,7 +30,7 @@ void SPI::SetMaster(bool master)
    if (master)
    {
       // set SCK and MOSI pins to output
-      DDRB = (1<<PORT5) | (1<<PORT3) | 1 <<PORT2;
+      DDRB = DDRB | (1<<PORT5) | (1<<PORT3) | 1 <<PORT2;
       // 
       SPCR = (1<<SPE) |
              (1<<MSTR)|
@@ -38,7 +38,7 @@ void SPI::SetMaster(bool master)
    }
    else
    {
-      DDRB = 1 << PORT4;
+      DDRB = DDRB | (1 << PORT4);
       SPCR = (1<<SPE);
    }
 }

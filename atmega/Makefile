@@ -4,18 +4,19 @@ F_CPU = 16000000
 COM_PORT = COM5
 COMMON_DIR = ../common
 
-SOURCES = main.c uart.c pwm_rc_pin.c utils.c atmega_pin.c \
-			 dht11.c \
+SOURCES = main.c uart.c  utils.c atmega_pin.c \
 			 spi.c \
-			 i2c.c \
+			 # dht11.c \
+			 # pwm_rc_pin.c \
+			 # i2c.c \
 
-COMMON_SOURCES =  \
-					  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
-					  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
-					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
-					  device/NRF24L01.c \
-#					 rfid_reader.c\
-#					 PCDdata.c PCD8544.c \
+COMMON_SOURCES = 	rfid_reader.c\
+					 #  device/NRF24L01.c \
+					 #  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
+					 #  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
+					 #  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
+					 # PCDdata.c PCD8544.c \
+					 
 DIRS = 
 #Compiler flags
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
@@ -53,7 +54,7 @@ $(OBJDIR)/main.hex: $(OBJDIR)/main.elf
 	$(AVR-OC) -j .text -j .data  -O ihex $< $@
 
 $(OBJDIR)/main.elf: $(OBJECTS) $(OBJECTS_FROM_COMMON)
-	$(CC) $(LFLAGS)  $(OBJECTS) $(OBJECTS_FROM_COMMON) -o $@
+	$(CC) $(CFLAGS) $(LFLAGS)  $(OBJECTS) $(OBJECTS_FROM_COMMON) -o $@
 
 
 $(OBJDIR)/common/%.o: $(COMMON_DIR)/%.c
