@@ -28,11 +28,11 @@ uart::UART serial;
 
 // #include "test_rfidreader.h"
 
-//#include "test_i2c.h"
+#include "test_i2c.h"
 
 //#include "test_nrf.h"
 
-#include "test_max7219.h"
+//#include "test_max7219.h"
 
 int main(void) {
    serial << "Hello\n";
