@@ -6,19 +6,18 @@ COMMON_DIR = ../common
 
 SOURCES = main.c uart.c  utils.c atmega_pin.c \
 			 i2c.c \
-			 3rdparty/Wire.cpp 3rdparty/twi.c 
 			 # spi.c \
 			 # dht11.c \
 			 # pwm_rc_pin.c \
 
 COMMON_SOURCES = 	rfid_reader.c\
-					  # device/NRF24L01.c \
-					  # rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
-					  # rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
-					  # rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
-					  # PCDdata.c PCD8544.c \
+					  device/NRF24L01.c \
+					  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
+					  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
+					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
+					  PCDdata.c PCD8544.c \
 					 
-DIRS = 3rdParty
+DIRS = 
 #Compiler flags
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 

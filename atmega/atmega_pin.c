@@ -82,6 +82,12 @@ Pin& Pin::operator= (bool val)
    return *this;
 }
 
+Pin& Pin::operator= (Pin& otherPin)
+{
+   *this = (bool)otherPin;
+   return *this;
+}
+
 Pin::operator bool() const
 {
    return *m_pin & m_pin_msk;

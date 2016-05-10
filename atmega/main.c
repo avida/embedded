@@ -22,13 +22,13 @@ uart::UART serial;
 //#define SPI_MASTER
 // #include "test_spi.h"
 
-// #include "test_irdecoder.h"
+#include "test_irdecoder.h"
 
 // #include "test_dht11.h"
 
 // #include "test_rfidreader.h"
 
-#include "test_i2c.h"
+// #include "test_i2c.h"
 
 //#include "test_nrf.h"
 

@@ -47,18 +47,10 @@ I2C::I2C(char address):m_address(address)
 
 void I2C::Init()
 {
-   // gpio::Pin sda(gpio::C, 4);
-   // gpio::Pin scl(gpio::C, 5);
-   // sda = true;
-   // scl = true;
-     /* Initial ADC Peripheral for User's Trimpot Input */
-  ADMUX=0x00;                 // Select Channel 0 (PC0)
-
-  // Initial the ADC Circuit
-  ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1);
-
-  // Free running Mode
-  ADCSRB = 0x00;
+   gpio::Pin sda(gpio::C, 4);
+   gpio::Pin scl(gpio::C, 5);
+   sda = true;
+   scl = true;
 
    TWSR = 0;
    TWBR = 0x0C;
