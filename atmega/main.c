@@ -22,7 +22,7 @@ uart::UART serial;
 //#define SPI_MASTER
 // #include "test_spi.h"
 
-#include "test_irdecoder.h"
+// #include "test_irdecoder.h"
 
 // #include "test_dht11.h"
 
@@ -33,6 +33,10 @@ uart::UART serial;
 //#include "test_nrf.h"
 
 //#include "test_max7219.h"
+
+// #include "test_stepper.h"
+
+#include "test_timers.h"
 
 int main(void) {
    serial << "Hello\n";

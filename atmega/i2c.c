@@ -138,14 +138,13 @@ bool I2C::ReadRegister(uint8_t address, uint8_t reg, char* data, uint8_t len)
 
 bool I2C::Transmit(uint8_t address, char* data, uint8_t len)
 {
-   serial << "start\n";
+   // serial << "start\n";
    START_TRANSMIT()
-   serial << "ok\n";
+   // serial << "ok\n";
    CHECK_TWSR_ERR_CODE(TW_START)
    // transmitting address
    TWDR = (address << 1) | TW_WRITE;
    TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWEA);
-   serial << TWDR << "\n";
    // wait till ack has been received
    serial << "wait\n";
    TWCR_WAIT()

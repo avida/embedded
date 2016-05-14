@@ -6,7 +6,7 @@ gpio::Pin pb5(gpio::B, 5);
 gpio::Pin pd4(gpio::D, 4);
 
 int cnt = 0;
-void setupTimer();
+
 ISR (TIMER0_COMPA_vect)  
 {
   ir_decoder.ProcessSignal(!pd4);

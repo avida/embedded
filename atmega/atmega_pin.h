@@ -22,7 +22,7 @@ namespace gpio
       void SetToInput();
       void SetToOutput();
       virtual operator bool() const;
-      private:
+      public:
          volatile uint8_t *m_port;
          volatile uint8_t *m_pin;
          volatile uint8_t *m_port_ctl;
