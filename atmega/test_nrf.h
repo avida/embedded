@@ -3,7 +3,7 @@
 #include <util/delay.h>
 #include <string.h>
 
-#define TEST_SEND
+//#define TEST_SEND
 
 // CE => D9
 // CSN => D10
@@ -13,15 +13,16 @@
 
 char addr[] = {1,2,3,4,5,6,7};
 char *str = "Hello0";
+const int PAYLOAD_SIZE = strlen(str)+1;
 void test_send()
 {
    gpio::Pin cc(gpio::B, 2);
    gpio::Pin ce(gpio::B, 1);
    protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce);
+   device::NRF24L01 nrf(spi, ce, PAYLOAD_SIZE);
    //nrf.SetTXAddress(addr, 7);
    nrf.Init();
-   nrf.SetupTransmit();
+   nrf.StartTransmit();
    auto buff = nrf.GetBufferPtr();
    auto len = strlen(str)+1;
    serial << "len: " << len << "\n";
@@ -53,24 +54,43 @@ void test_receive()
    gpio::Pin cc(gpio::B, 2);
    gpio::Pin ce(gpio::B, 1);
    protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce);
+   device::NRF24L01 nrf(spi, ce, PAYLOAD_SIZE);
    nrf.Init();
    //nrf.SetRXAddress(addr, 7, 0);
    char *buf = nrf.GetBufferPtr();
    auto pack_len = strlen(str)+1;
-   nrf.Listen(pack_len);
+   nrf.Listen();
    while(1)
    {
+
+      auto pipe = nrf.Receive();
+      while(pipe != PIPE_EMPTY)
+      {
+         serial << "Received data from pipe: " << pipe << ": " <<buf << "\n";
+         pipe = nrf.Receive();
+      }
       auto status = nrf.ReadStatus();
       serial << "receive status: " << status << "\n";
-      if (status == 64)
-      {
-         int s = nrf.Receive(pack_len);
-         serial << "s: " << s << "\n"; 
-         serial << "b: " << buf << "\n";
-      }
       _delay_ms(1000);
    }
+}
+
+void test_pingpong()
+{
+   gpio::Pin cc(gpio::B, 2);
+   gpio::Pin ce(gpio::B, 1);
+   protocol::SPI spi(&cc);
+   device::NRF24L01 nrf(spi, ce, PAYLOAD_SIZE);
+   nrf.Init();
+   char *buf = nrf.GetBufferPtr();
+   while(1)
+   {
+      nrf.Receive();
+      serial << "received: " << buf;
+
+   }
+   nrf.StartTransmit();
+
 }
 
 void test_main()

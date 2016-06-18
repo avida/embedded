@@ -43,8 +43,8 @@ namespace device
 char NRF24L01::buffer[NRF_BUFFER_SIZE + 1] = {0x00};
 #define data_buffer (NRF24L01::buffer + 1)
 
-NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin):
-                  m_spi(spi), m_CE(CEpin)
+NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin, int payload):
+                  m_spi(spi), m_CE(CEpin), m_payload(payload)
 {
    Init();
 }
@@ -56,6 +56,14 @@ void NRF24L01::Init()
    data_buffer[0] = TX_CONFIG;
    WriteRegister(REG_CONFIG);
     _delay_ms(2);
+   // FLUSh TX and TR
+   ExecuteCommand(FLUSH_RX);
+   ExecuteCommand(FLUSH_TX);
+   // clear status bits
+   data_buffer[0] = 0b11110000;
+   WriteRegister(REG_STATUS);
+   data_buffer[0] = 0;
+   WriteRegister(REG_CONFIG);
    // we are in stand by mode
 }
 
@@ -87,28 +95,38 @@ void NRF24L01::SetRXAddress(char* addr, int len, int pipe)
 
 }
 
-void NRF24L01::Listen(int packet_size)
+void NRF24L01::Listen()
 {
    auto status = buffer[0];
-   data_buffer[0] = packet_size;
+   data_buffer[0] = m_payload;
    WriteRegister(REG_RX_PW_P0);
+   m_CE = true;
    _delay_us(11);
    data_buffer[0] = RX_CONFIG;
    WriteRegister(REG_CONFIG);
    _delay_us(130);
 }
 
-int NRF24L01::Receive(int len)
+#define PIPE_MASK  0b00001110
+#define PIPE_EMPTY 0b00000111
+
+int NRF24L01::Receive()
 {
-   // reset status bit
+   //REad status to get pipe 
+   auto status = ReadStatus();
+   auto pipe = (status & PIPE_MASK) >> 1;
+   if (pipe ==  PIPE_EMPTY)
+      return PIPE_EMPTY;
    data_buffer[0] = RX_DR_BIT;
    WriteRegister(REG_STATUS);
    // read data
-   ExecuteCommand(R_RX_PAYLOAD, len);
-   return buffer[0];
+   ExecuteCommand(R_RX_PAYLOAD, m_payload+1);
+   // reset status bit
+   status = buffer[0];
+   return (status & PIPE_MASK) >> 1;
 }
 
-void NRF24L01::SetupTransmit()
+void NRF24L01::StartTransmit()
 {
    // Go to TX mode
    // fill up FIFO
@@ -118,8 +136,13 @@ void NRF24L01::SetupTransmit()
    WriteRegister(REG_CONFIG);
    m_CE = true;
    _delay_us(10);
-   m_CE = false;
+   // m_CE = false;
    _delay_us(130);
+}
+
+void NRF24L01::StartReceive()
+{
+
 }
 
 void NRF24L01::Transmit(int len)
@@ -145,6 +168,7 @@ char* NRF24L01::GetBufferPtr()
 {
    return data_buffer; 
 }
+
 void NRF24L01::ExecuteCommand(char cmd, int len)
 {
    buffer[0] = cmd;

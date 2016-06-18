@@ -6,12 +6,12 @@ COMMON_DIR = ../common
 
 SOURCES = main.c uart.c  utils.c atmega_pin.c \
 			 i2c.c \
-			 # spi.c \
+			 spi.c \
 			 # dht11.c \
 			 # pwm_rc_pin.c \
 
-COMMON_SOURCES = 	rfid_reader.c\
-					  # device/NRF24L01.c \
+COMMON_SOURCES =  rfid_reader.c\
+					  device/NRF24L01.c \
 					  # rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
 					  # rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
 					  # rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
@@ -22,7 +22,7 @@ DIRS =
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 
 CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os
-CFLAGS += -Wall -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--relax
+CFLAGS += -Wall -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf
 CFLAGS += -std=c++11
 INCLUDES= -I$(COMMON_DIR)
 CFLAGS += $(INCLUDES)
@@ -48,7 +48,7 @@ flash-m328: $(OBJDIR)/main.hex
 	avrdude -c avrisp -p atmega328p -P $(COM_PORT) -b 57600 -U flash:w:$<
 
 flash-m168: $(OBJDIR)/main.hex
-	avrdude -c avrisp -p atmega168 -P $(COM_PORT) -b 19200 -U flash:w:$<  
+	avrdude -c avrisp -p atmega168 -P $(COM_PORT) -b 19200 -U flash:w:$<
 
 $(OBJDIR)/main.hex: $(OBJDIR)/main.elf
 	$(AVR-OC) -j .text -j .data  -O ihex $< $@

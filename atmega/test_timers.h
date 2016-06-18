@@ -36,7 +36,7 @@ void test_main()
    gpio::Pin led (gpio::B, 5);
    PERF_TEST_BEGIN
    // *led.m_port = _BV(5);
-   led = true;
+   // led = true;
    // utils::Delay_us(10);
    PERF_TEST_END
    return;

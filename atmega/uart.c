@@ -45,12 +45,14 @@ UART::UART()
 UART& UART::operator << (const char * str)
 {
   putString (str);
+  return *this;
 }
 
 UART& UART::operator << (int num)
 {
   sprintf(tmp, "%d", num);
   putString (tmp);
+  return *this;
 }
 
 }
