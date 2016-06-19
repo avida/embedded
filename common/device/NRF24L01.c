@@ -18,13 +18,10 @@ extern uart::UART serial;
 #define REG_EN_AA     0x01
 #define REG_EN_RXADDR 0x02
 #define REG_SETUP_AW  0x03
+#define REG_SETUP_RET 0x04
 #define REG_STATUS    0x07
 
 #define REG_RX_PW_P0  0x11
-
-// status bits
-#define RX_DR_BIT 0b01000000
-#define TX_DS_BIT 0b00100000
 
 #define BUILD_WRITE_REG_CMD(reg) \
         (1 << 5) | reg
@@ -40,6 +37,19 @@ extern uart::UART serial;
 namespace device
 {
 
+// status bits
+#define PIPE_MASK  0b00001110
+#define TX_FULL_BIT  0x01
+#define MAX_RT_BIT   0x10
+#define TX_DS_BIT    0x20
+#define RX_DR_BIT    0x40
+
+int NRF24L01::NRFStatus::DataReadyPipe() { return (m_status & PIPE_MASK) >> 1; }
+bool NRF24L01::NRFStatus::isReceived() { return m_status & RX_DR_BIT; }
+bool NRF24L01::NRFStatus::isTransmitted() { return m_status & TX_DS_BIT; }
+bool NRF24L01::NRFStatus::isTXFull() { return m_status & TX_FULL_BIT; }
+bool NRF24L01::NRFStatus::IsRetransmitExceed() { return m_status & MAX_RT_BIT; }
+
 char NRF24L01::buffer[NRF_BUFFER_SIZE + 1] = {0x00};
 #define data_buffer (NRF24L01::buffer + 1)
 
@@ -51,7 +61,8 @@ NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin, int payload):
 void NRF24L01::Init()
 {
    _delay_ms(11);
-   data_buffer[0] = 0;
+   // disable autoacknowledgement
+   data_buffer[0] = 1;
    WriteRegister(REG_EN_AA);
    data_buffer[0] = TX_CONFIG;
    WriteRegister(REG_CONFIG);
@@ -62,8 +73,8 @@ void NRF24L01::Init()
    // clear status bits
    data_buffer[0] = 0b11110000;
    WriteRegister(REG_STATUS);
-   data_buffer[0] = 0;
-   WriteRegister(REG_CONFIG);
+   // data_buffer[0] = 0;
+   // WriteRegister(REG_CONFIG);
    // we are in stand by mode
 }
 
@@ -107,23 +118,19 @@ void NRF24L01::Listen()
    _delay_us(130);
 }
 
-#define PIPE_MASK  0b00001110
-#define PIPE_EMPTY 0b00000111
 
-int NRF24L01::Receive()
+NRF24L01::NRFStatus NRF24L01::Receive()
 {
    //REad status to get pipe 
    auto status = ReadStatus();
-   auto pipe = (status & PIPE_MASK) >> 1;
-   if (pipe ==  PIPE_EMPTY)
-      return PIPE_EMPTY;
+   if (status.DataReadyPipe() == PIPE_EMPTY)
+      return status;
    data_buffer[0] = RX_DR_BIT;
    WriteRegister(REG_STATUS);
    // read data
    ExecuteCommand(R_RX_PAYLOAD, m_payload+1);
    // reset status bit
-   status = buffer[0];
-   return (status & PIPE_MASK) >> 1;
+   return NRF24L01::NRFStatus(buffer[0]);
 }
 
 void NRF24L01::StartTransmit()
@@ -131,6 +138,8 @@ void NRF24L01::StartTransmit()
    // Go to TX mode
    // fill up FIFO
    // and set PRIM_RX to 0
+   data_buffer[0] = 0b01101111;
+   WriteRegister(REG_SETUP_RET);
    ExecuteCommand(R_TX_PAYLOAD, 1);
    data_buffer[0] = TX_CONFIG;
    WriteRegister(REG_CONFIG);
@@ -145,9 +154,10 @@ void NRF24L01::StartReceive()
 
 }
 
-void NRF24L01::Transmit(int len)
+NRF24L01::NRFStatus NRF24L01::Transmit(int len)
 {
    ExecuteCommand(R_TX_PAYLOAD, len);
+   return NRF24L01::NRFStatus(buffer[0]);
 }
 
 void NRF24L01::ResetTransmit()
@@ -157,11 +167,23 @@ void NRF24L01::ResetTransmit()
    WriteRegister(REG_STATUS);
 }
 
-char NRF24L01::ReadStatus()
+void NRF24L01::RetryTransmit()
+{
+   data_buffer[0] =  MAX_RT_BIT;
+   WriteRegister(REG_STATUS);
+}
+
+NRF24L01::NRFStatus NRF24L01::ReadStatus()
 {
    buffer[0] = NOP;
    m_spi.TranseferBytes(buffer, 1);
-   return buffer[0];
+   return NRF24L01::NRFStatus(buffer[0]);
+}
+
+char NRF24L01::ReadConfig()
+{
+   ReadRegister(REG_CONFIG);
+   return data_buffer[0];
 }
 
 char* NRF24L01::GetBufferPtr()
