@@ -125,11 +125,11 @@ NRF24L01::NRFStatus NRF24L01::Receive()
    auto status = ReadStatus();
    if (status.DataReadyPipe() == PIPE_EMPTY)
       return status;
+   // reset status bit
    data_buffer[0] = RX_DR_BIT;
    WriteRegister(REG_STATUS);
    // read data
-   ExecuteCommand(R_RX_PAYLOAD, m_payload+1);
-   // reset status bit
+   ExecuteCommand(R_RX_PAYLOAD, m_payload);
    return NRF24L01::NRFStatus(buffer[0]);
 }
 
@@ -140,7 +140,7 @@ void NRF24L01::StartTransmit()
    // and set PRIM_RX to 0
    data_buffer[0] = 0b01101111;
    WriteRegister(REG_SETUP_RET);
-   ExecuteCommand(R_TX_PAYLOAD, 1);
+   // ExecuteCommand(R_TX_PAYLOAD, 1);
    data_buffer[0] = TX_CONFIG;
    WriteRegister(REG_CONFIG);
    m_CE = true;
@@ -149,14 +149,9 @@ void NRF24L01::StartTransmit()
    _delay_us(130);
 }
 
-void NRF24L01::StartReceive()
+NRF24L01::NRFStatus NRF24L01::Transmit()
 {
-
-}
-
-NRF24L01::NRFStatus NRF24L01::Transmit(int len)
-{
-   ExecuteCommand(R_TX_PAYLOAD, len);
+   ExecuteCommand(R_TX_PAYLOAD, m_payload);
    return NRF24L01::NRFStatus(buffer[0]);
 }
 

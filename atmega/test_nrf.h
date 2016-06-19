@@ -3,7 +3,6 @@
 #include <util/delay.h>
 #include <string.h>
 
-#define TEST_SEND
 
 // CE => D9
 // CSN => D10
@@ -24,8 +23,6 @@ void test_send()
    nrf.Init();
    nrf.StartTransmit();
    auto buff = nrf.GetBufferPtr();
-   auto len = strlen(str)+1;
-   serial << "len: " << len << "\n";
    auto count = 1;
    while(1)
    {
@@ -42,14 +39,12 @@ void test_send()
       {
          strcpy(buff, str);
          str[5] = 48 + count;
-
          if (++count > 9)
-
          {
             count = 0;
          }
          serial << "transmit: " << buff << "\n";
-         nrf.Transmit(len);
+         nrf.Transmit();
       }
       _delay_ms(1000);
    }
@@ -86,29 +81,82 @@ void test_receive()
    }
 }
 
+// #define TEST_SEND
+const char *ping = "PING";
+const char *pong = "PONG";
+void sendString(device::NRF24L01& nrf, const char *body)
+{
+   nrf.StartTransmit();
+   auto buff = nrf.GetBufferPtr();
+   serial << "sending: " << body << "\n";
+   strcpy(buff, body);
+   auto status = nrf.Transmit();
+   while(!status.isTransmitted())
+   {
+      if (status.IsRetransmitExceed())
+      {
+         serial << "Retransmit\n";
+         nrf.RetryTransmit();
+      }
+      _delay_ms(500);
+      serial << "st: " << status.GetStatus() << "\n";
+      status = nrf.ReadStatus();
+   }
+   serial << "send status: " << status.GetStatus() << "\n";
+   nrf.ResetTransmit();
+   nrf.StandBy();
+}
+
 void test_pingpong()
 {
    gpio::Pin cc(gpio::B, 2);
    gpio::Pin ce(gpio::B, 1);
    protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce, PAYLOAD_SIZE);
+   device::NRF24L01 nrf(spi, ce, 5);
    nrf.Init();
    char *buf = nrf.GetBufferPtr();
+   auto status = nrf.ReadStatus();
+#ifdef TEST_SEND
+   serial << "sending initial ping\n";
+   sendString(nrf, ping);
+#endif
+   nrf.Listen();
    while(1)
-   {
-      nrf.Receive();
-      serial << "received: " << buf;
+   {  
+      do {
+         status = nrf.ReadStatus();
+      }
+      while(!status.isReceived());
+      serial << "status : " << status.GetStatus() << "\n";
+      status = nrf.Receive();
+      serial << "received: " << buf << " status: " << status.GetStatus() << "\n";
+      nrf.StandBy();
+      if (!strcmp(buf, ping))
+      {
+         sendString(nrf, pong);
+         
+      }
+      else if (!strcmp(buf, ping))
+      {
+         sendString(nrf, ping);
+      }
+      else
+      {
+         serial << "UNKNOWN SIGNLA RECEIVED!!! \n";
+         return;
+      }
+      nrf.Listen();
+      _delay_ms(1000);
 
    }
-   nrf.StartTransmit();
-
 }
 
 void test_main()
 {
-#ifdef TEST_SEND
-   test_send();
-#else
-   test_receive();
-#endif
+   test_pingpong();
+// #ifdef TEST_SEND
+//    test_send();
+// #else
+//    test_receive();
+// #endif
 }

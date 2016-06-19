@@ -32,11 +32,11 @@ public:
    void SetRXAddress(char* addr, int len, int pipe);
    NRFStatus Receive();
    void StartTransmit();
-   void StartReceive();
    void Listen();
-   NRFStatus Transmit(int len);
+   NRFStatus Transmit();
    void ResetTransmit();
    void RetryTransmit();
+   void StandBy() {m_CE=false;};
    char* GetBufferPtr();
    NRFStatus ReadStatus();
    int PayloadWidth();
