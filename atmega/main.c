@@ -30,7 +30,7 @@ uart::UART serial;
 
 // #include "test_i2c.h"
 
-// #include "test_nrf.h"
+#include "test_nrf.h"
 
 // #include "test_max7219.h"
 
@@ -40,11 +40,11 @@ uart::UART serial;
 
 // #include "test_adc.h"
 
-#include "test_pins.h"
+// #include "test_pins.h"
 
 int main(void) {
    serial << "Hello\n";
    test_main();
    serial << "Bye bye\n";
-   return 0;    
+   return 0;
 }

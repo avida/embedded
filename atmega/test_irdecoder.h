@@ -9,6 +9,7 @@ int cnt = 0;
 
 ISR (TIMER0_COMPA_vect)  
 {
+   utils::InterruptsLock lck;
   ir_decoder.ProcessSignal(!pd4);
 }
 
