@@ -53,6 +53,7 @@ private:
    protocol::SPI m_spi;
    int m_payload;
    gpio::IPinOutput& m_CE;
+   char m_config;
    static char buffer[NRF_BUFFER_SIZE + 1];
 };
 

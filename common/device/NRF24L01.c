@@ -33,6 +33,12 @@ extern uart::UART serial;
 //                      | ||-- PRIM_RX
 //          ENABLE_CRC--  |--PWR_UP                
 
+#define ENABLE_CRC_BIT 0b00001000
+#define PWR_UP_BIT     0b00000010
+#define RX_BIT         0b00000001
+#define INT_RX_DR      0b10000000
+#define INT_TX_DS      0b01000000
+#define INT_MAX_RT     0b00100000
 
 namespace device
 {
@@ -54,7 +60,7 @@ char NRF24L01::buffer[NRF_BUFFER_SIZE + 1] = {0x00};
 #define data_buffer (NRF24L01::buffer + 1)
 
 NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin, int payload):
-                  m_spi(spi), m_CE(CEpin), m_payload(payload)
+                  m_spi(spi), m_CE(CEpin), m_payload(payload), m_config(INT_RX_DR|ENABLE_CRC_BIT|PWR_UP_BIT|RX_BIT)
 {
    Init();
 }
@@ -64,7 +70,7 @@ void NRF24L01::Init()
    // disable autoacknowledgement
    data_buffer[0] = 1;
    WriteRegister(REG_EN_AA);
-   data_buffer[0] = TX_CONFIG;
+   data_buffer[0] = m_config;
    WriteRegister(REG_CONFIG);
     _delay_ms(2);
    // FLUSh TX and TR
@@ -73,9 +79,6 @@ void NRF24L01::Init()
    // clear status bits
    data_buffer[0] = 0b11110000;
    WriteRegister(REG_STATUS);
-   // data_buffer[0] = 0;
-   // WriteRegister(REG_CONFIG);
-   // we are in stand by mode
 }
 
 int NRF24L01::PayloadWidth()
@@ -138,7 +141,7 @@ void NRF24L01::StartTransmit()
    // Go to TX mode
    // fill up FIFO
    // and set PRIM_RX to 0
-   data_buffer[0] = 0b01101111;
+   data_buffer[0] = 0b11111111;
    WriteRegister(REG_SETUP_RET);
    // ExecuteCommand(R_TX_PAYLOAD, 1);
    data_buffer[0] = TX_CONFIG;
@@ -158,6 +161,7 @@ NRF24L01::NRFStatus NRF24L01::Transmit()
 void NRF24L01::ResetTransmit()
 {
    // reset status bit
+   ExecuteCommand(FLUSH_TX);
    data_buffer[0] =  TX_DS_BIT;
    WriteRegister(REG_STATUS);
 }

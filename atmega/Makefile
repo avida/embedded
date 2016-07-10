@@ -12,9 +12,9 @@ SOURCES = main.c uart.c  utils.c atmega_pin.c \
 
 COMMON_SOURCES =  rfid_reader.c\
 					  device/NRF24L01.c \
-					  # rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
-					  # rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
-					  # rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
+					  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
+					  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
+					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
 					  # PCDdata.c PCD8544.c \
 					 
 DIRS = 

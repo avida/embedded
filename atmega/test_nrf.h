@@ -153,6 +153,8 @@ void test_pingpong()
 
 void test_main()
 {
+   cc.SetToOutput();
+   ce.SetToOutput();
    test_pingpong();
 // #ifdef TEST_SEND
 //    test_send();

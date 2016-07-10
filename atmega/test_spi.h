@@ -4,6 +4,7 @@ void test_main()
 {
    char bt = 12;
    char bt2 = 24;
+   cc.SetToOutput();
 #ifdef SPI_MASTER
    serial << "master\n";
    gpio::Pin cc(gpio::B, 2);

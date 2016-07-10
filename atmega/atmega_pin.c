@@ -66,7 +66,7 @@ Pin::Pin(Port port, uint8_t number):
                                  m_port_ctl(getPortCtl(port)),
                                  m_pin_msk(1<<number)
 {
-   SetToOutput();
+   // SetToOutput();
 }
 
 Pin& Pin::operator= (bool val)
