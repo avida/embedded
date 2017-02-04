@@ -24,7 +24,7 @@ DIRS =
 CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os
 CFLAGS += -Wall -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf
 CFLAGS += -std=c++11
-INCLUDES= -I$(COMMON_DIR)
+INCLUDES= -I$(COMMON_DIR) -I.
 CFLAGS += $(INCLUDES)
 168_LFLAGS = -mmcu=atmega168 
 328_LFLAGS = -mmcu=atmega328p
