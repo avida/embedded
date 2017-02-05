@@ -17,11 +17,11 @@ COMMON_SOURCES =  rfid_reader.c\
 					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
 					  # PCDdata.c PCD8544.c \
 					 
-DIRS = 
+DIRS = firmware/
 #Compiler flags
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 
-CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os
+CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -O3
 CFLAGS += -Wall -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf
 CFLAGS += -std=c++11
 INCLUDES= -I$(COMMON_DIR) -I.

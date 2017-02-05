@@ -9,7 +9,6 @@
 // MOSI => D11
 // SCK => D13
 // MISO => D12
-
 char addr[] = {1,2,3,4,5,6,7};
 char *str = "Hello0";
 const int PAYLOAD_SIZE = strlen(str)+1;
@@ -82,7 +81,8 @@ void test_receive()
 }
 
 // #define TEST_SEND
-const char *ping = "PING";
+
+const char *ping = "PRNG";
 const char *pong = "PONG";
 void sendString(device::NRF24L01& nrf, const char *body)
 {
@@ -111,8 +111,10 @@ void test_pingpong()
 {
    gpio::Pin cc(gpio::B, 2);
    gpio::Pin ce(gpio::B, 1);
+   cc.SetToOutput();
+   ce.SetToOutput();
    protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce, 5);
+   device::NRF24L01 nrf(spi, ce, 4);
    nrf.Init();
    char *buf = nrf.GetBufferPtr();
    auto status = nrf.ReadStatus();
@@ -136,7 +138,7 @@ void test_pingpong()
          sendString(nrf, pong);
          
       }
-      else if (!strcmp(buf, ping))
+      else if (!strcmp(buf, pong))
       {
          sendString(nrf, ping);
       }
@@ -153,8 +155,6 @@ void test_pingpong()
 
 void test_main()
 {
-   cc.SetToOutput();
-   ce.SetToOutput();
    test_pingpong();
 // #ifdef TEST_SEND
 //    test_send();

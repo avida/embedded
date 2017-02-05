@@ -11,6 +11,7 @@
 #include <gpio.h>
 #include <util/delay.h>
 //#define SPI_MASTER
+uart::UART serial;
 // #include "test_spi.h"
 
 // #include "test_irdecoder.h"
@@ -21,7 +22,7 @@
 
 // #include "test_i2c.h"
 
-// #include "test_nrf.h"
+#include "test/test_nrf.h"
 
 // #include "test_max7219.h"
 
@@ -29,7 +30,7 @@
 
 // #include "test_timers.h"
 
-#include "test/test_adc.h"
+// #include "test/test_adc.h"
 
 // #include "test_pins.h"
 
@@ -37,5 +38,7 @@
 
 void fw_main()
 {
+   serial << "Hello\n";
    test_main();
+   serial << "Bye bye\n";
 }
