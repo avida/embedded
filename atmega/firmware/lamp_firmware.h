@@ -43,109 +43,19 @@ void onDecode (void* d)
    char* data = (char *)d;
    sprintf(str, "decoded: %02x%02x%02x\n", *(data+2), *(data+1), *data );
    ledPin = true;
-   serial << str;
+   // serial << str;
    ledPin = false;
-}
-
-#include <device/NRF24L01.h>
-#include <spi.h>
-#include <util/delay.h>
-#include <string.h>
-
-
-// CE => D9
-// CSN => D10
-// MOSI => D11
-// SCK => D13
-// MISO => D12
-
-char addr[] = {1,2,3,4,5,6,7};
-char *str = "Hello0";
-const int PAYLOAD_SIZE = strlen(str)+1;
-
-// #define TEST_SEND
-const char *ping = "PING";
-const char *pong = "PONG";
-void sendString(device::NRF24L01& nrf, const char *body)
-{
-   nrf.StartTransmit();
-   auto buff = nrf.GetBufferPtr();
-   serial << "sending: " << body << "\n";
-   strcpy(buff, body);
-   auto status = nrf.Transmit();
-   while(!status.isTransmitted())
-   {
-      if (status.IsRetransmitExceed())
-      {
-         serial << "Retransmit\n";
-         nrf.RetryTransmit();
-      }
-      status = nrf.ReadStatus();
-      serial << "read st: " << status.GetStatus() << "\n";
-      _delay_ms(500);
-   }
-   serial << "send status: " << status.GetStatus() << "\n";
-   nrf.ResetTransmit();
-   nrf.StandBy();
-}
-
-void test_pingpong()
-{
-   gpio::Pin cc(gpio::B, 2);
-   gpio::Pin ce(gpio::B, 1);
-   protocol::SPI spi(&cc);
-   cc.SetToOutput();
-   ce.SetToOutput();
-   serial << "start\n";
-   device::NRF24L01 nrf(spi, ce, 5);
-   nrf.Init();
-   serial << "init\n";
-   char *buf = nrf.GetBufferPtr();
-   auto status = nrf.ReadStatus();
-#ifdef TEST_SEND
-   serial << "sending initial ping\n";
-   sendString(nrf, ping);
-#endif
-   serial << "listen\n";
-   nrf.Listen();
-   while(1)
-   {  
-      do {
-         status = nrf.ReadStatus();
-      }
-      while(!status.isReceived());
-      serial << "status : " << status.GetStatus() << "\n";
-      status = nrf.Receive();
-      serial << "received: " << buf << " status: " << status.GetStatus() << "\n";
-      nrf.StandBy();
-      if (!strcmp(buf, ping))
-      {
-         sendString(nrf, pong);
-         
-      }
-      else if (!strcmp(buf, pong))
-      {
-         sendString(nrf, ping);
-      }
-      else
-      {
-         serial << "UNKNOWN SIGNLA RECEIVED!!! \n";
-         return;
-      }
-      nrf.Listen();
-      _delay_ms(1000);
-
-   }
 }
 
 void fw_main()
 {
-
-   decoderPin.SetToInput();
-   ir_decoder.SetDecodeCB(onDecode);
-   // setupTimer();
-
-   test_pingpong();
-   while(1);
+   // decoderPin.SetToInput();
+   // ir_decoder.SetDecodeCB(onDecode);
+   setupTimer();
+   while(1)
+   {
+      ledPin = !ledPin;
+      _delay_ms(500);
+   }
 }
 

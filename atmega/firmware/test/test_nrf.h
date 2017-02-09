@@ -12,77 +12,9 @@
 char addr[] = {1,2,3,4,5,6,7};
 char *str = "Hello0";
 const int PAYLOAD_SIZE = strlen(str)+1;
-void test_send()
-{
-   gpio::Pin cc(gpio::B, 2);
-   gpio::Pin ce(gpio::B, 1);
-   protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce, PAYLOAD_SIZE);
-   //nrf.SetTXAddress(addr, 7);
-   nrf.Init();
-   nrf.StartTransmit();
-   auto buff = nrf.GetBufferPtr();
-   auto count = 1;
-   while(1)
-   {
-      auto status = nrf.ReadStatus();
-      serial << "status after: " << status.GetStatus() << "\n";
-      nrf.ResetTransmit();
-      status = nrf.ReadStatus();
-      if (status.IsRetransmitExceed())
-      {
-         serial << "Retransmit\n";
-         nrf.RetryTransmit();
-      }
-      else
-      {
-         strcpy(buff, str);
-         str[5] = 48 + count;
-         if (++count > 9)
-         {
-            count = 0;
-         }
-         serial << "transmit: " << buff << "\n";
-         nrf.Transmit();
-      }
-      _delay_ms(1000);
-   }
-
-}
-
-void test_receive()
-{
-   gpio::Pin cc(gpio::B, 2);
-   gpio::Pin ce(gpio::B, 1);
-   protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce, PAYLOAD_SIZE);
-   nrf.Init();
-   //nrf.SetRXAddress(addr, 7, 0);
-   char *buf = nrf.GetBufferPtr();
-   nrf.Listen();
-   auto config = nrf.ReadConfig();
-   serial << "receive config: " << config << "\n";
-   auto status = nrf.ReadStatus();
-   serial << "receive status: " << status.GetStatus() << "\n";
-   while(1)
-   {
-
-      auto status = nrf.Receive();
-      while(status.DataReadyPipe() != PIPE_EMPTY)
-      {
-         serial << "Received data from pipe: " << status.DataReadyPipe() << ": " <<buf << "\n";
-         status = nrf.Receive();
-         serial << "receive status: " << status.GetStatus() << "\n";
-      }
-      _delay_ms(1000);
-      status = nrf.ReadStatus();
-   serial << "receive status: " << status.GetStatus() << "\n";
-   }
-}
-
 // #define TEST_SEND
 
-const char *ping = "PRNG";
+const char *ping = "PING";
 const char *pong = "PONG";
 void sendString(device::NRF24L01& nrf, const char *body)
 {
@@ -98,7 +30,7 @@ void sendString(device::NRF24L01& nrf, const char *body)
          serial << "Retransmit\n";
          nrf.RetryTransmit();
       }
-      _delay_ms(500);
+      //_delay_ms(500);
       serial << "st: " << status.GetStatus() << "\n";
       status = nrf.ReadStatus();
    }
@@ -114,7 +46,7 @@ void test_pingpong()
    cc.SetToOutput();
    ce.SetToOutput();
    protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce, 4);
+   device::NRF24L01 nrf(spi, ce, 5);
    nrf.Init();
    char *buf = nrf.GetBufferPtr();
    auto status = nrf.ReadStatus();
@@ -156,9 +88,4 @@ void test_pingpong()
 void test_main()
 {
    test_pingpong();
-// #ifdef TEST_SEND
-//    test_send();
-// #else
-//    test_receive();
-// #endif
 }

@@ -17,13 +17,14 @@ COMMON_SOURCES =  rfid_reader.c\
 					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
 					  # PCDdata.c PCD8544.c \
 					 
-DIRS = firmware/
+DIRS = firmware \
+	    firmware/test
 #Compiler flags
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 
-CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -O3
-CFLAGS += -Wall -ffunction-sections -fdata-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf
-CFLAGS += -std=c++11
+CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -O3 $(foreach var,$(DEFINES), -D$(var))
+CFLAGS += -Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf
+CFLAGS += -std=c++11 -fno-merge-constants
 INCLUDES= -I$(COMMON_DIR) -I.
 CFLAGS += $(INCLUDES)
 168_LFLAGS = -mmcu=atmega168 
@@ -31,24 +32,32 @@ CFLAGS += $(INCLUDES)
 
 OBJDIR = obj
 OBJECTS = $(patsubst %.c, $(OBJDIR)/%.o, $(SOURCES))
+HEADERS = $(wildcard *h $(foreach var,$(DIRS), $(var)/*h))
 OBJECTS_FROM_COMMON = $(patsubst %.c, $(OBJDIR)/common/%.o, $(COMMON_SOURCES))
 
 OBJ_SUBDIRS = $(patsubst %, $(OBJDIR)/%, $(DIRS)) 
 OBJ_SUBDIRS += $(patsubst %, $(OBJDIR)/common/%, $(dir $(COMMON_SOURCES)))
+GCCVER= $(shell $(CC) --version | grep g++ | sed 's/^.* //g')
 
 all:
 	mkdir -p $(OBJ_SUBDIRS)
-	mingw32-make flash-m328 TARGET=m328
+	mingw32-make flash TARGET=m328
 
 m168:
+ifneq ($(shell cat .DEFINES), $(DEFINES))
+	rm -rf $(OBJDIR)/*
+	echo $(DEFINES) > .DEFINES
+endif
 	mkdir -p $(OBJ_SUBDIRS) 
-	mingw32-make flash-m168 TARGET=m168
+	mingw32-make flash TARGET=m168
 
-flash-m328: $(OBJDIR)/main.hex
-	avrdude -c avrisp -p atmega328p -P $(COM_PORT) -b 57600 -U flash:w:$<
-
-flash-m168: $(OBJDIR)/main.hex
-	avrdude -c avrisp -p atmega168 -P $(COM_PORT) -b 19200 -U flash:w:$<
+flash: $(OBJDIR)/main.hex
+ifeq ($(TARGET),m168)
+	$(eval AVRDUDE_FLAGS = -p atmega168 -b 19200)
+else
+	$(eval AVRDUDE_FLAGS = -p atmega328p -b 57600)
+endif
+	avrdude -c avrisp $(AVRDUDE_FLAGS) -P $(COM_PORT) -U flash:w:$<
 
 $(OBJDIR)/main.hex: $(OBJDIR)/main.elf
 	$(AVR-OC) -j .text -j .data  -O ihex $< $@
@@ -60,13 +69,15 @@ $(OBJDIR)/main.elf: $(OBJECTS) $(OBJECTS_FROM_COMMON)
 $(OBJDIR)/common/%.o: $(COMMON_DIR)/%.c
 	$(CC) $(CFLAGS) $(COMMON_DIR)/$< -c -o $@
 
-$(OBJDIR)/%.o: %.c
+$(OBJDIR)/%.o: %.c $(HEADERS)
 ifeq ($(TARGET),m168)
-	$(eval CFLAGS = $(CFLAGS) $(168_CFLAGS))
+	$(eval CFLAGS += $(168_CFLAGS))
 	$(eval LFLAGS = $(168_LFLAGS))
+	$(eval AVRDUDE_FLAGS = -p atmega168 -b 19200)
 else
 	$(eval CFLAGS = $(CFLAGS) $(328_CFLAGS))
 	$(eval LFLAGS = $(328_LFLAGS))
+	$(eval AVRDUDE_FLAGS = -p atmega328p -b 57600)
 endif
 	$(CC) $(CFLAGS) $< -c -o $@
 
