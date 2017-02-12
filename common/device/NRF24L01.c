@@ -64,6 +64,7 @@ NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin, int payload):
 {
    Init();
 }
+
 void NRF24L01::Init()
 {
    _delay_ms(11);

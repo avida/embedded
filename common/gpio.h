@@ -12,6 +12,12 @@ namespace gpio
       E
    };
 
+   struct PinInfo
+   {
+      Port port;
+      uint8_t pin;
+   };
+
    class IPinInput
    {
    public:

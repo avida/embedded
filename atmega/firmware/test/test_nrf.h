@@ -1,5 +1,4 @@
 #include <device/NRF24L01.h>
-#include <spi.h>
 #include <util/delay.h>
 #include <string.h>
 
@@ -30,7 +29,7 @@ void sendString(device::NRF24L01& nrf, const char *body)
          serial << "Retransmit\n";
          nrf.RetryTransmit();
       }
-      //_delay_ms(500);
+      _delay_ms(500);
       serial << "st: " << status.GetStatus() << "\n";
       status = nrf.ReadStatus();
    }
@@ -43,8 +42,6 @@ void test_pingpong()
 {
    gpio::Pin cc(gpio::B, 2);
    gpio::Pin ce(gpio::B, 1);
-   cc.SetToOutput();
-   ce.SetToOutput();
    protocol::SPI spi(&cc);
    device::NRF24L01 nrf(spi, ce, 5);
    nrf.Init();

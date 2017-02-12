@@ -3,10 +3,12 @@ AVR-OC = avr-objcopy
 F_CPU = 16000000
 COM_PORT = COM5
 COMMON_DIR = ../common
+TOOLCHAIN_DIR = G:\toolchains\avr\avr\bin
 
 SOURCES = main.c uart.c  utils.c atmega_pin.c \
 			 i2c.c \
 			 spi.c \
+			 firmware/lamp.c \
 			 # dht11.c \
 			 # pwm_rc_pin.c \
 
@@ -22,7 +24,7 @@ DIRS = firmware \
 #Compiler flags
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 
-CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -O3 $(foreach var,$(DEFINES), -D$(var))
+CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os $(foreach var,$(DEFINES), -D$(var))
 CFLAGS += -Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf
 CFLAGS += -std=c++11 -fno-merge-constants
 INCLUDES= -I$(COMMON_DIR) -I.
@@ -38,6 +40,7 @@ OBJECTS_FROM_COMMON = $(patsubst %.c, $(OBJDIR)/common/%.o, $(COMMON_SOURCES))
 OBJ_SUBDIRS = $(patsubst %, $(OBJDIR)/%, $(DIRS)) 
 OBJ_SUBDIRS += $(patsubst %, $(OBJDIR)/common/%, $(dir $(COMMON_SOURCES)))
 GCCVER= $(shell $(CC) --version | grep g++ | sed 's/^.* //g')
+$(eval PATH=$(TOOLCHAIN_DIR);$(PATH))
 
 all:
 	mkdir -p $(OBJ_SUBDIRS)
@@ -64,7 +67,6 @@ $(OBJDIR)/main.hex: $(OBJDIR)/main.elf
 
 $(OBJDIR)/main.elf: $(OBJECTS) $(OBJECTS_FROM_COMMON)
 	$(CC) $(CFLAGS) $(LFLAGS)  $(OBJECTS) $(OBJECTS_FROM_COMMON) -o $@
-
 
 $(OBJDIR)/common/%.o: $(COMMON_DIR)/%.c
 	$(CC) $(CFLAGS) $(COMMON_DIR)/$< -c -o $@

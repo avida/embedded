@@ -87,4 +87,3 @@ UART& UART::operator << (int num)
 }
 
 }
-
