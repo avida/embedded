@@ -21,9 +21,9 @@ uart::UART serial;
 
 // #include "test_rfidreader.h"
 
-// #include "test_i2c.h"
+#include "test/test_i2c.h"
 
-#include "test/test_nrf.h"
+// #include "test/test_nrf.h"
 
 // #include "test_max7219.h"
 

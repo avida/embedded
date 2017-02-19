@@ -67,7 +67,6 @@ char I2C::Listen()
    return TWSR;
 }  
 
-
 bool I2C::Receive(uint8_t address, char* data, uint8_t len)
 {
    START_TRANSMIT()
@@ -104,31 +103,33 @@ bool I2C::ReadRegister(uint8_t address, uint8_t reg, char* data, uint8_t len)
    TWCR_WAIT()
    // check error code
    CHECK_TWSR_ERR_CODE(TW_MT_SLA_ACK)
-
+   // send register address
    TWDR = reg;
    TWCR = _BV(TWINT) | _BV(TWEN);
    TWCR_WAIT()
-   serial << TWSR << "\n";
+   // serial << TWSR << "\n";
+   // check acknowledge arrived
    CHECK_TWSR_ERR_CODE(TW_MT_DATA_ACK)
+   // resend start signal ro read data
    START_TRANSMIT()
-   serial << TWSR << "\n";
-   CHECK_TWSR_ERR_CODE(TW_START)
-   serial << "address sent\n";
+   // serial <<"st reg: " << TWSR << "\n";
+   CHECK_TWSR_ERR_CODE(TW_REP_START)
+   // serial << "address sent\n";
    // transmitting address
    TWDR = (address << 1) | TW_READ;
    TWCR = _BV(TWINT) | _BV(TWEN);
    // wait till ack has been received
    TWCR_WAIT()
    // check error code
-   CHECK_TWSR_ERR_CODE(TW_MT_SLA_ACK)
-   serial << "sending data\n";
+   CHECK_TWSR_ERR_CODE(TW_MR_SLA_ACK)
+   // serial << "sending data\n";
    while(len)
    {
       // transfer data
       TWCR = _BV(TWINT) | _BV(TWEN);
       TWCR_WAIT()
       *data = TWDR;
-      CHECK_TWSR_ERR_CODE(TW_MT_DATA_ACK)  
+      CHECK_TWSR_ERR_CODE(TW_MR_DATA_NACK)  
       len--;
       data++;  
    }
@@ -146,7 +147,7 @@ bool I2C::Transmit(uint8_t address, char* data, uint8_t len)
    TWDR = (address << 1) | TW_WRITE;
    TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWEA);
    // wait till ack has been received
-   serial << "wait\n";
+   // serial << "wait\n";
    TWCR_WAIT()
    // check error code
    CHECK_TWSR_ERR_CODE(TW_MT_SLA_ACK)
