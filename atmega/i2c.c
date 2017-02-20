@@ -67,12 +67,12 @@ char I2C::Listen()
    return TWSR;
 }  
 
-bool I2C::Receive(uint8_t address, char* data, uint8_t len)
+bool I2C::Receive(char* data, uint8_t len)
 {
    START_TRANSMIT()
    CHECK_TWSR_ERR_CODE(TW_START)
    // transmitting address
-   TWDR = (address << 1) | TW_READ;
+   TWDR = (m_address << 1) | TW_READ;
    TWCR = 1 << TWINT | 1 << TWEN;
    // wait till ack has been received
    TWCR_WAIT()
@@ -92,12 +92,12 @@ bool I2C::Receive(uint8_t address, char* data, uint8_t len)
    return true;
 }
 
-bool I2C::ReadRegister(uint8_t address, uint8_t reg, char* data, uint8_t len)
+bool I2C::ReadRegister(uint8_t reg, char* data, uint8_t len)
 {
    START_TRANSMIT()
    CHECK_TWSR_ERR_CODE(TW_START)
    // transmitting address
-   TWDR = (address << 1) | TW_WRITE;
+   TWDR = (m_address << 1) | TW_WRITE;
    TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWEA);
    // wait till ack has been received
    TWCR_WAIT()
@@ -116,7 +116,7 @@ bool I2C::ReadRegister(uint8_t address, uint8_t reg, char* data, uint8_t len)
    CHECK_TWSR_ERR_CODE(TW_REP_START)
    // serial << "address sent\n";
    // transmitting address
-   TWDR = (address << 1) | TW_READ;
+   TWDR = (m_address << 1) | TW_READ;
    TWCR = _BV(TWINT) | _BV(TWEN);
    // wait till ack has been received
    TWCR_WAIT()
@@ -137,14 +137,14 @@ bool I2C::ReadRegister(uint8_t address, uint8_t reg, char* data, uint8_t len)
    return true;
 }
 
-bool I2C::Transmit(uint8_t address, char* data, uint8_t len)
+bool I2C::Transmit(char* data, uint8_t len)
 {
    // serial << "start\n";
    START_TRANSMIT()
    // serial << "ok\n";
    CHECK_TWSR_ERR_CODE(TW_START)
    // transmitting address
-   TWDR = (address << 1) | TW_WRITE;
+   TWDR = (m_address << 1) | TW_WRITE;
    TWCR = _BV(TWINT) | _BV(TWEN) | _BV(TWEA);
    // wait till ack has been received
    // serial << "wait\n";
