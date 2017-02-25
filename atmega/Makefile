@@ -14,6 +14,7 @@ SOURCES = main.c uart.c  utils.c atmega_pin.c \
 
 COMMON_SOURCES =  rfid_reader.c\
 					  device/NRF24L01.c \
+					  device/BMP180.c \
 					  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
 					  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
 					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
@@ -25,12 +26,13 @@ DIRS = firmware \
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 
 CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os $(foreach var,$(DEFINES), -D$(var))
-CFLAGS += -Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf
+CFLAGS += -Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf -lprintf_flt -lm
 CFLAGS += -std=c++11 -fno-merge-constants
 INCLUDES= -I$(COMMON_DIR) -I.
 CFLAGS += $(INCLUDES)
-168_LFLAGS = -mmcu=atmega168 
-328_LFLAGS = -mmcu=atmega328p
+LFLAGS = -Wl,-u,vfprintf
+168_LFLAGS = $(LFLAGS) -mmcu=atmega168 
+328_LFLAGS = $(LFLAGS) -mmcu=atmega328p
 
 OBJDIR = obj
 OBJECTS = $(patsubst %.c, $(OBJDIR)/%.o, $(SOURCES))

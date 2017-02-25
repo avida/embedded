@@ -86,4 +86,18 @@ UART& UART::operator << (int num)
   return *this;
 }
 
+UART& UART::operator << (double num)
+{
+  sprintf(tmp, "%f", num);
+  putString (tmp);
+  return *this;
+}
+
+UART& UART::operator << (unsigned int num)
+{
+  sprintf(tmp, "%u", num);
+  putString (tmp);
+  return *this;
+}
+
 }

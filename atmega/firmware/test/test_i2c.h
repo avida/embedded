@@ -56,6 +56,23 @@ void FillRegisters(protocol::I2C& i2c, CalibrationRegisters& regs)
    for(int i = 0; i < 11;++i)
    {
       read_reg(i2c, CalibrationRegBase + i*2, &regs.data[i*2]);
+      // if(i >= 3 && i <=5 )
+      // {
+      //    unsigned int val = (uint16_t)regs.data[i*2]<<8;
+      //    val |= (uint16_t)regs.data[i*2+1];
+      //    switch(i)
+      //    {
+      //       case 3:
+      //       regs.ac4 = val;
+      //       break;
+      //       case 4:
+      //       regs.ac5 = val;
+      //       break;
+      //       case 5:
+      //       regs.ac6 = val;
+      //       break;
+      //    }
+      // }
    }
 }
 const char BMP180_address = 0x77;
