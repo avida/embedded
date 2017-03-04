@@ -11,9 +11,9 @@ public:
    SPI();
    void SendByte(char byte);
     char ReceiveByte();
-   gpio::IPinOutput* m_control_pin;
    void TranseferBytes(char *bytes, int length);
 private:
    void SetMaster(bool master);
+   gpio::IPinOutput* m_control_pin;
 };
 }

@@ -1,0 +1,14 @@
+COMMON_DIR = ../common
+INCLUDES = -I$(COMMON_DIR) 
+COMMON_SOURCES =  rfid_reader.c\
+					  device/NRF24L01.c \
+					  # device/BMP180.c \
+					  # rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
+					  # rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
+					  # rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
+					  # PCDdata.c PCD8544.c \
+
+OBJDIR = obj
+OBJ_SUBDIRS += $(patsubst %, $(OBJDIR)/common/%, $(dir $(COMMON_SOURCES)))
+OBJECTS_FROM_COMMON = $(patsubst %.c, $(OBJDIR)/common/%.o, $(COMMON_SOURCES))
+

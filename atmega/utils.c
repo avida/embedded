@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <util/delay.h>
+#include <avr/interrupt.h>
 
 namespace utils
 {
@@ -19,5 +20,11 @@ void Delay_us(uint16_t us)
       _delay_us(1);
    }
 }
+class InterruptsLock
+{
+public:
+   InterruptsLock() {cli();}
+   ~InterruptsLock() {sei();}
+};
 
 } // namespace

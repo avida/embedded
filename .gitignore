@@ -5,4 +5,5 @@
 *.out
 *.hex
 *.exe
+*.swp
 .DEFINES

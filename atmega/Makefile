@@ -2,7 +2,6 @@ CC = avr-g++
 AVR-OC = avr-objcopy
 F_CPU = 16000000
 COM_PORT = COM5
-COMMON_DIR = ../common
 TOOLCHAIN_DIR = G:\toolchains\avr\avr\bin
 
 SOURCES = main.c uart.c  utils.c atmega_pin.c \
@@ -12,36 +11,27 @@ SOURCES = main.c uart.c  utils.c atmega_pin.c \
 			 # dht11.c \
 			 # pwm_rc_pin.c \
 
-COMMON_SOURCES =  rfid_reader.c\
-					  device/NRF24L01.c \
-					  device/BMP180.c \
-					  rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
-					  rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \
-					  rc_decoder/rc_state_machine.c rc_decoder/rc_pulse_data.c \
-					  # PCDdata.c PCD8544.c \
-					 
+include ../Makefile.common
+
 DIRS = firmware \
 	    firmware/test
 #Compiler flags
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 
+CFLAGS += -std=c++11 -fno-merge-constants
 CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os $(foreach var,$(DEFINES), -D$(var))
 CFLAGS += -Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax
 # CFLAGS +=  -lm -Dprintf=iprintf -lprintf_flt 
-CFLAGS += -std=c++11 -fno-merge-constants
-INCLUDES= -I$(COMMON_DIR) -I.
+INCLUDES+= -I.
 CFLAGS += $(INCLUDES)
 # LFLAGS = -Wl,-u,vfprintf
 168_LFLAGS = $(LFLAGS) -mmcu=atmega168 
 328_LFLAGS = $(LFLAGS) -mmcu=atmega328p
 
-OBJDIR = obj
 OBJECTS = $(patsubst %.c, $(OBJDIR)/%.o, $(SOURCES))
 HEADERS = $(wildcard *h $(foreach var,$(DIRS), $(var)/*h))
-OBJECTS_FROM_COMMON = $(patsubst %.c, $(OBJDIR)/common/%.o, $(COMMON_SOURCES))
 
 OBJ_SUBDIRS = $(patsubst %, $(OBJDIR)/%, $(DIRS)) 
-OBJ_SUBDIRS += $(patsubst %, $(OBJDIR)/common/%, $(dir $(COMMON_SOURCES)))
 GCCVER= $(shell $(CC) --version | grep g++ | sed 's/^.* //g')
 $(eval PATH=$(TOOLCHAIN_DIR);$(PATH))
 

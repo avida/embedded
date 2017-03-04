@@ -1,6 +1,6 @@
 #include <rfid_reader.h>
 
-#include <avr/delay.h>
+#include <utils.h>
 #include <string.h>
 
 #include <uart.h>
@@ -37,7 +37,7 @@ RFIDReader::RFIDReader(protocol::SPI& spi, gpio::IPinOutput& reset): m_spi(spi),
 void RFIDReader::Init()
 {
    m_reset = true;
-   _delay_ms(50);
+   utils::Delay_ms(50);
    WriteRegister(TModeReg, 0x80);
    WriteRegister(TPrescalerReg, 0xa9);
    WriteRegister(TReloadRegH, 0x03);
@@ -48,7 +48,7 @@ void RFIDReader::SelfTest()
 {
 
    SendCommand(CMD_SOFT_RESET);
-   _delay_ms(50);
+   utils::Delay_ms(50);
    while(ReadRegister(CommandReg) & (1<<4));
 
    serial << "start test \n";
