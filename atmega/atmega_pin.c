@@ -8,6 +8,8 @@ extern uart::UART serial;
 
 namespace gpio
 {
+namespace atmega
+{
 
 volatile uint8_t *_getPort(Port port)
 {
@@ -103,4 +105,5 @@ void Pin::SetToOutput()
    *m_port_ctl |= m_pin_msk;
 }
 
+}
 }

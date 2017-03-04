@@ -40,8 +40,8 @@ void sendString(device::NRF24L01& nrf, const char *body)
 
 void test_pingpong()
 {
-   gpio::Pin cc(gpio::B, 2);
-   gpio::Pin ce(gpio::B, 1);
+   gpio::atmega::Pin cc(gpio::B, 2);
+   gpio::atmega::Pin ce(gpio::B, 1);
    protocol::SPI spi(&cc);
    device::NRF24L01 nrf(spi, ce, 5);
    nrf.Init();

@@ -47,8 +47,8 @@ I2C::I2C(char address):m_address(address)
 
 void I2C::Init()
 {
-   gpio::Pin sda(gpio::C, 4);
-   gpio::Pin scl(gpio::C, 5);
+   gpio::atmega::Pin sda(gpio::C, 4);
+   gpio::atmega::Pin scl(gpio::C, 5);
    sda = true;
    scl = true;
 

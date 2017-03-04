@@ -13,29 +13,29 @@
 //#define SPI_MASTER
 
 uart::UART serial;
-// #include "test_spi.h"
+// #include "test/test_spi.h"
 
-// #include "test_irdecoder.h"
+// #include "test/test_irdecoder.h"
 
-// #include "test_dht11.h"
+// #include "test/test_dht11.h"
 
-// #include "test_rfidreader.h"
+// #include "test/test_rfidreader.h"
 
 // #include "test/test_i2c.h"
 
-#include "test/test_bmp180.h"
+// #include "test/test_bmp180.h"
 
 // #include "test/test_nrf.h"
 
-// #include "test_max7219.h"
+// #include "test/test_max7219.h"
 
-// #include "test_stepper.h"
+// #include "test/test_stepper.h"
 
-// #include "test_timers.h"
+// #include "test/test_timers.h"
 
 // #include "test/test_adc.h"
 
-// #include "test_pins.h"
+#include "test/test_pins.h"
 
 // #include "test_application.h"
 

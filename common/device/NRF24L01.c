@@ -1,5 +1,5 @@
 #include <device/NRF24L01.h>
-#include <util/delay.h>
+#include <utils.h>
 #include <uart.h>
 extern uart::UART serial;
 
@@ -67,13 +67,13 @@ NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin, int payload):
 
 void NRF24L01::Init()
 {
-   _delay_ms(11);
+   utils::Delay_ms(11);
    // disable autoacknowledgement
    data_buffer[0] = 1;
    WriteRegister(REG_EN_AA);
    data_buffer[0] = m_config;
    WriteRegister(REG_CONFIG);
-    _delay_ms(2);
+   utils::Delay_ms(2);
    // FLUSh TX and TR
    ExecuteCommand(FLUSH_RX);
    ExecuteCommand(FLUSH_TX);
@@ -116,10 +116,10 @@ void NRF24L01::Listen()
    data_buffer[0] = m_payload;
    WriteRegister(REG_RX_PW_P0);
    m_CE = true;
-   _delay_us(11);
+   utils::Delay_us(11);
    data_buffer[0] = RX_CONFIG;
    WriteRegister(REG_CONFIG);
-   _delay_us(130);
+   utils::Delay_us(130);
 }
 
 
@@ -148,9 +148,9 @@ void NRF24L01::StartTransmit()
    data_buffer[0] = TX_CONFIG;
    WriteRegister(REG_CONFIG);
    m_CE = true;
-   _delay_us(10);
+   utils::Delay_us(10);
    // m_CE = false;
-   _delay_us(130);
+   utils::Delay_us(130);
 }
 
 NRF24L01::NRFStatus NRF24L01::Transmit()

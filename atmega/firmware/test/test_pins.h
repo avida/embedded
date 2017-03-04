@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "atmega_pin.h"
 
 ISR(INT0_vect)
 {
@@ -9,19 +10,17 @@ ISR(INT0_vect)
 
 void test_main()
 {
-   sei();
+   // sei();
    EIMSK = 1;
    EICRA = 1;
    serial << "Heeee\n";
-   gpio::Pin pd2(gpio::D, 2);
-   pd2.SetToInput();
+   gpio::atmega::Pin led(gpio::B, 5);
+   led.SetToInput();
    char buff[20] = {0};
    char c;
    while(true)
    {
-      // serial << "pd2: " << pd2 << "\n";
-      // _delay_ms(500);
-      serial >> buff;
-      serial << "received: "<< buff << "\n";
+      led =!led;
+       _delay_ms(1500);
    }
 }

@@ -26,11 +26,12 @@ DIRS = firmware \
 328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 
 CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os $(foreach var,$(DEFINES), -D$(var))
-CFLAGS += -Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax -Dprintf=iprintf -lprintf_flt -lm
+CFLAGS += -Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax
+# CFLAGS +=  -lm -Dprintf=iprintf -lprintf_flt 
 CFLAGS += -std=c++11 -fno-merge-constants
 INCLUDES= -I$(COMMON_DIR) -I.
 CFLAGS += $(INCLUDES)
-LFLAGS = -Wl,-u,vfprintf
+# LFLAGS = -Wl,-u,vfprintf
 168_LFLAGS = $(LFLAGS) -mmcu=atmega168 
 328_LFLAGS = $(LFLAGS) -mmcu=atmega328p
 
@@ -56,7 +57,18 @@ endif
 	mkdir -p $(OBJ_SUBDIRS) 
 	mingw32-make flash TARGET=m168
 
-flash: $(OBJDIR)/main.hex
+flash ::
+ifeq ($(TARGET),m168)
+	$(eval CFLAGS += $(168_CFLAGS))
+	$(eval LFLAGS = $(168_LFLAGS))
+	$(eval AVRDUDE_FLAGS = -p atmega168 -b 19200)
+else
+	$(eval CFLAGS = $(CFLAGS) $(328_CFLAGS))
+	$(eval LFLAGS = $(328_LFLAGS))
+	$(eval AVRDUDE_FLAGS = -p atmega328p -b 57600)
+endif
+
+flash ::  $(OBJDIR)/main.hex
 ifeq ($(TARGET),m168)
 	$(eval AVRDUDE_FLAGS = -p atmega168 -b 19200)
 else
@@ -74,15 +86,6 @@ $(OBJDIR)/common/%.o: $(COMMON_DIR)/%.c
 	$(CC) $(CFLAGS) $(COMMON_DIR)/$< -c -o $@
 
 $(OBJDIR)/%.o: %.c $(HEADERS)
-ifeq ($(TARGET),m168)
-	$(eval CFLAGS += $(168_CFLAGS))
-	$(eval LFLAGS = $(168_LFLAGS))
-	$(eval AVRDUDE_FLAGS = -p atmega168 -b 19200)
-else
-	$(eval CFLAGS = $(CFLAGS) $(328_CFLAGS))
-	$(eval LFLAGS = $(328_LFLAGS))
-	$(eval AVRDUDE_FLAGS = -p atmega328p -b 57600)
-endif
 	$(CC) $(CFLAGS) $< -c -o $@
 
 clean: 
