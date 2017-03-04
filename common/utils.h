@@ -4,7 +4,14 @@
 
 namespace utils
 {
-   void Delay_ms(uint16_t ms);
-   void Delay_us(uint16_t us);
-   class InterruptsLock;
+
+void Delay_ms(uint16_t ms);
+void Delay_us(uint16_t us);
+class InterruptsLock
+{
+public:
+   InterruptsLock();
+   ~InterruptsLock();
+};
+
 }

@@ -20,11 +20,8 @@ void Delay_us(uint16_t us)
       _delay_us(1);
    }
 }
-class InterruptsLock
-{
-public:
-   InterruptsLock() {cli();}
-   ~InterruptsLock() {sei();}
-};
+
+InterruptsLock::InterruptsLock() {cli();}
+InterruptsLock::~InterruptsLock() {sei();}
 
 } // namespace

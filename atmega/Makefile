@@ -31,7 +31,7 @@ CFLAGS += $(INCLUDES)
 OBJECTS = $(patsubst %.c, $(OBJDIR)/%.o, $(SOURCES))
 HEADERS = $(wildcard *h $(foreach var,$(DIRS), $(var)/*h))
 
-OBJ_SUBDIRS = $(patsubst %, $(OBJDIR)/%, $(DIRS)) 
+OBJ_SUBDIRS += $(patsubst %, $(OBJDIR)/%, $(DIRS)) 
 GCCVER= $(shell $(CC) --version | grep g++ | sed 's/^.* //g')
 $(eval PATH=$(TOOLCHAIN_DIR);$(PATH))
 
