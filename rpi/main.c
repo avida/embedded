@@ -23,7 +23,8 @@ int main()
       device::NRF24L01 nrf(spi, ce, 5);
       pin = true;
       std::cout << "I hate makefiles!!!\n";
-      std::cout <<"Pin state: " <<  pin;
+      std::cout <<"Pin state: " <<  pin << std::endl;
+      std::cout << (int)nrf.ReadStatus().GetStatus() << std::endl;
    }
    catch(const std::runtime_error& e)
    {
