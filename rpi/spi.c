@@ -4,6 +4,7 @@
 #include <boost/format.hpp>
 #include <bcm2835.h>
 #include "gpio_rpi.h"
+#include <cstring>
 
 namespace protocol
 {
@@ -43,8 +44,9 @@ char SPI::ReceiveByte()
 
 void SPI::TranseferBytes(char *bytes, int length)
 {
-   char tmp[50];
+   char tmp[length];
    bcm2835_spi_transfernb(bytes, tmp, length);
+   memcpy(bytes, tmp, length);
 }
 
 void SPI::SetMaster(bool master)
