@@ -15,29 +15,6 @@ const int PAYLOAD_SIZE = strlen(str)+1;
 
 const char *ping = "PING";
 const char *pong = "PONG";
-void sendString(device::NRF24L01& nrf, const char *body)
-{
-   nrf.StartTransmit();
-   auto buff = nrf.GetBufferPtr();
-   serial << "sending: " << body << "\n";
-   strcpy(buff, body);
-   auto status = nrf.Transmit();
-   while(!status.isTransmitted())
-   {
-      if (status.IsRetransmitExceed())
-      {
-         serial << "Retransmit\n";
-         nrf.RetryTransmit();
-      }
-      _delay_ms(500);
-      serial << "st: " << status.GetStatus() << "\n";
-      status = nrf.ReadStatus();
-   }
-   serial << "send status: " << status.GetStatus() << "\n";
-   nrf.ResetTransmit();
-   nrf.StandBy();
-}
-
 void test_pingpong()
 {
    gpio::atmega::Pin cc(gpio::B, 2);
@@ -49,7 +26,7 @@ void test_pingpong()
    auto status = nrf.ReadStatus();
 #ifdef TEST_SEND
    serial << "sending initial ping\n";
-   sendString(nrf, ping);
+   nrf.SendString(ping);
 #endif
    nrf.Listen();
    while(1)
@@ -64,12 +41,12 @@ void test_pingpong()
       nrf.StandBy();
       if (!strcmp(buf, ping))
       {
-         sendString(nrf, pong);
+         nrf.SendString(nrf, pong);
          
       }
       else if (!strcmp(buf, pong))
       {
-         sendString(nrf, ping);
+         nrf.SendString(nrf, ping);
       }
       else
       {

@@ -1,6 +1,7 @@
 #include <device/NRF24L01.h>
 #include <utils.h>
 #include <uart.h>
+#include <string.h>
 extern uart::UART serial;
 
 // Commands
@@ -165,6 +166,28 @@ void NRF24L01::ResetTransmit()
    ExecuteCommand(FLUSH_TX);
    data_buffer[0] =  TX_DS_BIT;
    WriteRegister(REG_STATUS);
+}
+
+void NRF24L01::SendString(const char *str)
+{
+   StartTransmit();
+   auto buff = GetBufferPtr();
+   strcpy(buff, str);
+   auto status = Transmit();
+   while(!status.isTransmitted())
+   {
+      if (status.IsRetransmitExceed())
+      {
+         serial << "Retransmit\n";
+         RetryTransmit();
+      }
+      utils::Delay_ms(500);
+      serial << "st: " << status.GetStatus() << "\n";
+      status = ReadStatus();
+   }
+   serial << "send status: " << status.GetStatus() << "\n";
+   ResetTransmit();
+   StandBy();
 }
 
 void NRF24L01::RetryTransmit()

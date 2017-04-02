@@ -36,6 +36,7 @@ public:
    NRFStatus Transmit();
    void ResetTransmit();
    void RetryTransmit();
+   void SendString(const char *str);
    void StandBy() {m_CE=false;};
    char* GetBufferPtr();
    NRFStatus ReadStatus();
