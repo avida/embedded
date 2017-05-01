@@ -16,7 +16,7 @@ include ../Makefile.common
 DIRS = firmware \
 	    firmware/test
 #Compiler flags
-328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328 
+328_CFLAGS = -D__AVR_ATmega328P__  -DF_CPU=$(F_CPU)UL -mmcu=atmega328p
 168_CFLAGS = -D__AVR_ATmega168__  -DF_CPU=$(F_CPU)UL -mmcu=atmega168 
 CFLAGS += -std=c++11 -fno-merge-constants
 CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os $(foreach var,$(DEFINES), -D$(var))
@@ -29,7 +29,7 @@ CFLAGS += $(INCLUDES)
 328_LFLAGS = $(LFLAGS) -mmcu=atmega328p
 
 OBJECTS = $(patsubst %.c, $(OBJDIR)/%.o, $(SOURCES))
-HEADERS = $(wildcard *h $(foreach var,$(DIRS), $(var)/*h))
+HEADERS = $(wildcard *h $(foreach var,$(DIRS) + $(COMMON_DIR), $(var)/*h))
 
 OBJ_SUBDIRS += $(patsubst %, $(OBJDIR)/%, $(DIRS)) 
 GCCVER= $(shell $(CC) --version | grep g++ | sed 's/^.* //g')

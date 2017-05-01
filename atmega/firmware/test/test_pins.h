@@ -10,17 +10,18 @@ ISR(INT0_vect)
 
 void test_main()
 {
-   // sei();
    EIMSK = 1;
    EICRA = 1;
+   sei();
    serial << "Heeee\n";
+   gpio::atmega::Pin ext_iq(gpio::D, 2);
+   ext_iq.SetToInput();
    gpio::atmega::Pin led(gpio::B, 5);
-   led.SetToInput();
    char buff[20] = {0};
    char c;
    while(true)
    {
       led =!led;
-       _delay_ms(1500);
+       utils::Delay_ms(1500);
    }
 }

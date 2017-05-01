@@ -29,17 +29,18 @@ extern uart::UART serial;
 
 #define BUILD_READ_REG_CMD(reg) \
         reg
-#define TX_CONFIG 0b00001010
-#define RX_CONFIG 0b00001011
 //                      | ||-- PRIM_RX
 //          ENABLE_CRC--  |--PWR_UP                
 
 #define ENABLE_CRC_BIT 0b00001000
 #define PWR_UP_BIT     0b00000010
 #define RX_BIT         0b00000001
-#define INT_RX_DR      0b10000000
-#define INT_TX_DS      0b01000000
-#define INT_MAX_RT     0b00100000
+#define MSK_INT_RX_DR      0b01000000
+#define MSK_INT_TX_DS      0b00100000
+#define MASK_INT_MAX_RT    0b00010000
+
+#define TX_CONFIG (MSK_INT_TX_DS |  MASK_INT_MAX_RT | ENABLE_CRC_BIT | PWR_UP_BIT )
+#define RX_CONFIG (TX_CONFIG | RX_BIT )
 
 namespace device
 {
@@ -61,7 +62,7 @@ char NRF24L01::buffer[NRF_BUFFER_SIZE + 1] = {0x00};
 #define data_buffer (NRF24L01::buffer + 1)
 
 NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin, int payload):
-                  m_spi(spi), m_CE(CEpin), m_payload(payload), m_config(INT_RX_DR|ENABLE_CRC_BIT|PWR_UP_BIT|RX_BIT)
+                  m_spi(spi), m_CE(CEpin), m_payload(payload), m_config(ENABLE_CRC_BIT|PWR_UP_BIT|RX_BIT)
 {
    Init();
 }
@@ -168,26 +169,58 @@ void NRF24L01::ResetTransmit()
    WriteRegister(REG_STATUS);
 }
 
-void NRF24L01::SendString(const char *str)
+bool NRF24L01::SendString(const char *str)
 {
    StartTransmit();
    auto buff = GetBufferPtr();
    strcpy(buff, str);
    auto status = Transmit();
+   auto retry_count = 0;
    while(!status.isTransmitted())
    {
       if (status.IsRetransmitExceed())
       {
-         serial << "Retransmit\n";
          RetryTransmit();
+         // serial <<  "retr " << retry_count << "\n";
+         if (MAX_RETRY_COUNT && ++retry_count >= MAX_RETRY_COUNT)
+         {
+            retry_count ++;
+            break;
+         }
       }
-      utils::Delay_ms(500);
-      serial << "st: " << status.GetStatus() << "\n";
       status = ReadStatus();
+      // serial << "send st: " << status.GetStatus() << "\n";
    }
-   serial << "send status: " << status.GetStatus() << "\n";
+   // serial << "send status: " << status.GetStatus() <<  " r:"<< retry_count <<"\n";
    ResetTransmit();
    StandBy();
+   return retry_count <= MAX_RETRY_COUNT;
+}
+
+void NRF24L01::ReceiveAsync(Async_cb data_ready)
+{
+   m_dr_cb = data_ready;
+}
+
+void NRF24L01::Async_ext_event()
+{
+   auto status = ReadStatus();
+   if (m_dr_cb && status.isReceived())
+   {
+      m_dr_cb();
+   }
+}
+
+NRF24L01::NRFStatus NRF24L01::ReceiveData()
+{
+   auto status = ReadStatus();
+   do
+   {
+      status = ReadStatus();
+   }
+   while(!status.isReceived());
+   status = Receive();
+   return status;
 }
 
 void NRF24L01::RetryTransmit()

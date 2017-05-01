@@ -25,7 +25,7 @@ uart::UART serial;
 
 // #include "test/test_bmp180.h"
 
-// #include "test/test_nrf.h"
+#include "test/test_nrf.h"
 
 // #include "test/test_max7219.h"
 
@@ -35,7 +35,7 @@ uart::UART serial;
 
 // #include "test/test_adc.h"
 
-#include "test/test_pins.h"
+// #include "test/test_pins.h"
 
 // #include "test_application.h"
 

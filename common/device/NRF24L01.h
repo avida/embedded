@@ -5,10 +5,11 @@
 
 #define NRF_BUFFER_SIZE 32
 #define PIPE_EMPTY 0b00000111
-
+#define MAX_RETRY_COUNT 20
 namespace device
 {
 
+typedef  void (*Async_cb)(void);
 class NRF24L01
 {
 public:
@@ -36,13 +37,15 @@ public:
    NRFStatus Transmit();
    void ResetTransmit();
    void RetryTransmit();
-   void SendString(const char *str);
+   bool SendString(const char *str);
    void StandBy() {m_CE=false;};
    char* GetBufferPtr();
    NRFStatus ReadStatus();
    int PayloadWidth();
    char ReadConfig();
-
+   NRFStatus ReceiveData();
+   void ReceiveAsync(Async_cb data_ready);
+   void Async_ext_event();
 private:
    void WriteRegister(int address, int len = 1);
    void ReadRegister(int address, int len = 1);
@@ -56,6 +59,7 @@ private:
    gpio::IPinOutput& m_CE;
    char m_config;
    static char buffer[NRF_BUFFER_SIZE + 1];
+   Async_cb m_dr_cb;
 };
 
 } // namespace
