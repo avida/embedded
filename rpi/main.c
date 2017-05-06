@@ -76,15 +76,9 @@ void set_edge(const std::string& edge)
    write(fd, edge.c_str(), edge.size());
 }
 
-void wait_for_edge(const std::string& edge)
+void wait_for_edge(void)
 {
-   set_edge(edge);
-   while(true)
-   {
-      auto events = epoll_wait(m_epfd, &m_events, 1, -1);
-      std::cout << events<< std::endl;
-   }
-
+   auto events = epoll_wait(m_epfd, &m_events, 1, -1);
 }
 
 protected:
@@ -97,36 +91,59 @@ protected:
 void test_gpio_irq(uint gpio)
 {
    GPIO gp(gpio);
-   gp.wait_for_edge(GPIO_EDGES::rising);
+   gp.set_edge(GPIO_EDGES::falling);
+   gp.wait_for_edge();
+}
+
+char *buf = NULL;
+device::NRF24L01 *nrf_ptr;
+
+const int GPIO_IRQ = 22;
+
+u_int cntr = 0;
+void data_ready()
+{
+      auto status = nrf_ptr->Receive();
+      std::cout<< "received " << buf << " cnt: "<< ++cntr <<  std::endl;
+      nrf_ptr->StandBy();
+      if(!nrf_ptr->SendString("PONG"))
+         std:: cout << "Failed to send PONG\n";
+      else
+         std::cout << "Pong\n";
+      nrf_ptr->Listen();
 }
 
 int main()
 {
 try
 {
-//   test_gpio_irq(22);
+//   test_gpio_irq(GPIO_IRQ);
 //   return 0;
    init_hw();
    gpio::rpi::Pin pin(RPI_GPIO_P1_18);
    gpio::rpi::Pin ce(RPI_GPIO_P1_16);
    gpio::rpi::Pin spi_pin(RPI_GPIO_P1_24);
    protocol::SPI spi(&spi_pin);
-   device::NRF24L01 nrf(spi, ce, 5);
-   char *buf = nrf.GetBufferPtr();
+   device::NRF24L01 nrf(spi, ce);
+   nrf_ptr = &nrf;
+   buf = nrf.GetBufferPtr();
+   GPIO gp(GPIO_IRQ);
+   gp.set_edge(GPIO_EDGES::falling);
+   gp.wait_for_edge();
+   auto status = nrf.ReadStatus();
+   if(!nrf_ptr->SendString("PONG"))
+      std:: cout << "Failed to send PONG\n";
+   else
+      std::cout << "Pong\n";
+   nrf.Listen();
+   nrf.ReceiveAsync(data_ready);
+   std::cout << "Listening for income signal\n";
    while(1)
    {
-      auto status = nrf.ReadStatus();
-      nrf.Listen();
-      do 
-      {
-         status = nrf.ReadStatus();
-      } while(!status.isReceived());
-      std::cout << (int)nrf.ReadStatus().GetStatus() << std::endl;
-      std::cout << "Receive" << std::endl;
-      status = nrf.Receive();
-      nrf.StandBy();
-      std::cout << buf << "\n";
-      nrf.SendString("PONG");
+      gp.wait_for_edge();
+      if (nrf_ptr)
+      nrf_ptr->Async_ext_event();
+
    }
 }
 catch(const std::runtime_error& e)
