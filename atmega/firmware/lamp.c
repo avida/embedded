@@ -11,7 +11,7 @@ Lamp::Lamp():
    m_light_pin(gpio::D, 3),
    m_spi_control_pin(gpio::B, 2),
    m_spi(&m_spi_control_pin),m_ce_pin(gpio::B, 1),
-   m_nrf(m_spi, m_ce_pin, sizeof(Report))
+   m_nrf(m_spi, m_ce_pin)
 {
    m_light_pin = false;
 }

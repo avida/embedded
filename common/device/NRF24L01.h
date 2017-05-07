@@ -8,11 +8,11 @@
 namespace device
 {
 
-const int kNRFPayload = 8;
 typedef  void (*Async_cb)(void);
 class NRF24L01
 {
 public:
+   static const int kNRFPayload = 8;
    class NRFStatus
    {
    public:
@@ -37,6 +37,7 @@ public:
    NRFStatus Transmit();
    void ResetTransmit();
    void RetryTransmit();
+   void ResetReceive();
    bool SendString(const char *str);
    void StandBy() {m_CE=false;};
    char* GetBufferPtr();
@@ -44,6 +45,7 @@ public:
    int PayloadWidth();
    char ReadConfig();
    NRFStatus ReceiveData();
+   bool TransmitData();
    void ReceiveAsync(Async_cb data_ready);
    void Async_ext_event();
 private:

@@ -64,7 +64,7 @@ char NRF24L01::buffer[kNRFPayload + 1] = {0x00};
 #define data_buffer (NRF24L01::buffer + 1)
 
 NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin):
-                  m_spi(spi), m_CE(CEpin), m_config(ENABLE_CRC_BIT|PWR_UP_BIT|RX_BIT)
+                  m_spi(spi), m_CE(CEpin), m_config(ENABLE_CRC_BIT|PWR_UP_BIT|RX_BIT), m_dr_cb(NULL)
 {
    Init();
 }
@@ -84,6 +84,9 @@ void NRF24L01::Init()
    // clear status bits
    data_buffer[0] = 0b11110000;
    WriteRegister(REG_STATUS);
+   // Set payload size
+   data_buffer[0] = kNRFPayload;
+   WriteRegister(REG_RX_PW_P0);
    // Set retry delay to 4 ms
    data_buffer[0] = (0b0010 << 4) | 3;
    WriteRegister(REG_SETUP_RET);
@@ -120,16 +123,21 @@ void NRF24L01::SetRXAddress(char* addr, int len, int pipe)
 
 void NRF24L01::Listen()
 {
-   auto status = buffer[0];
-   data_buffer[0] = kNRFPayload;
-   WriteRegister(REG_RX_PW_P0);
-   m_CE = true;
-   utils::Delay_us(11);
+
    data_buffer[0] = RX_CONFIG;
    WriteRegister(REG_CONFIG);
+
+   utils::Delay_us(11);
+   m_CE = true;
+
    utils::Delay_us(130);
 }
 
+void NRF24L01::ResetReceive()
+{
+   data_buffer[0] = RX_DR_BIT;
+   WriteRegister(REG_STATUS);
+}
 
 NRF24L01::NRFStatus NRF24L01::Receive()
 {
@@ -137,9 +145,6 @@ NRF24L01::NRFStatus NRF24L01::Receive()
    auto status = ReadStatus();
    if (status.DataReadyPipe() == PIPE_EMPTY)
       return status;
-   // reset status bit
-   data_buffer[0] = RX_DR_BIT;
-   WriteRegister(REG_STATUS);
    // read data
    ExecuteCommand(R_RX_PAYLOAD, kNRFPayload);
    return NRF24L01::NRFStatus(buffer[0]);
@@ -174,8 +179,8 @@ bool NRF24L01::SendString(const char *str)
 {
    auto buff = GetBufferPtr();
    strcpy(buff, str);
-   auto status = Transmit();
    StartTransmit();
+   auto status = Transmit();
    auto retry_count = 0;
    while(!status.isTransmitted())
    {
@@ -224,10 +229,33 @@ NRF24L01::NRFStatus NRF24L01::ReceiveData()
    do
    {
       status = ReadStatus();
+      // serial << "st: " << status.GetStatus() << "\n";
    }
-   while(!status.isReceived());
+   while(!status.isReceived() && status.DataReadyPipe() == 0x7);
    status = Receive();
    return status;
+}
+
+bool NRF24L01::TransmitData()
+{  
+   auto retry_count = 0;
+   auto status = Transmit();
+   while(!status.isTransmitted())
+   {
+      if (status.IsRetransmitExceed())
+      {
+         RetryTransmit();
+         if (MAX_RETRY_COUNT && ++retry_count >= MAX_RETRY_COUNT)
+            return false;
+      }
+      status = ReadStatus();
+      // ReadRegister(REG_OBSERVE_TX);
+      // auto obs = data_buffer[0];
+      // ReadRegister(REG_FIFO_STATUS);
+      // auto fifo = data_buffer[0];
+      // serial << "send st: " << status.GetStatus() <<" obs: " <<obs << " fifo: " << fifo << "\n";
+   }
+   return true;
 }
 
 void NRF24L01::RetryTransmit()

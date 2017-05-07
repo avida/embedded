@@ -1,4 +1,7 @@
+#pragma once
+
 #include <device/NRF24L01.h>
+#include <protocol/nrf_packet.hpp>
 #include <utils.h>
 #include <string.h>
 
@@ -65,27 +68,48 @@ void string_sent()
 
 }
 
+const uint8_t kPacketSize = 10;
+const char* kPing = "PING";
+const char* kPong = "PONG";
+
 void test_pingpong()
 {
    gpio::atmega::Pin cc(gpio::B, 2);
    gpio::atmega::Pin ce(gpio::B, 1);
    protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce, 5);
+   device::NRF24L01 nrf(spi, ce);
    nrf_ptr  = &nrf;
-   nrf.Init();
-   buf = nrf.GetBufferPtr();
-   auto status = nrf.ReadStatus();
+
+   protocol::NrfPacket packet(nrf, kPacketSize);
+   char data_buffer[kPacketSize];
+   packet.SetDataPtr(data_buffer);
+
 #ifdef TEST_SEND
    serial << "sending initial ping\n";
-   if(!nrf.SendString(ping))
+   memcpy(data_buffer, kPing, kPacketSize);
+   nrf.StartTransmit();
+   if(!packet.Transmit())
    {
       serial << "Failed to send initial signal\n";
    }
+   else
+      serial << "sent\n";
+   nrf.StandBy();
 #endif
-   nrf.Listen();
-   nrf.ReceiveAsync(data_ready);
+   // nrf.ReceiveAsync(data_ready);
    while(1)
    {  
+      nrf.Listen();
+      packet.Receive();
+      nrf.StandBy();
+      serial << "received: " << data_buffer << "\n";
+      memcpy(data_buffer, kPong, kPacketSize);
+      nrf.StartTransmit();
+      if (!packet.Transmit())
+         serial  << "Transmit failed\n";
+      else
+         serial << "sent " << kPong << "\n";
+      nrf.StandBy();
    };
 }
 
