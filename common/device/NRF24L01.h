@@ -3,8 +3,9 @@
 #include <spi.h>
 #include <gpio.h>
 
+#define NRF_BUFFER_SIZE 32
 #define PIPE_EMPTY 0b00000111
-#define MAX_RETRY_COUNT 200
+#define MAX_RETRY_COUNT 20
 namespace device
 {
 
@@ -27,7 +28,7 @@ public:
       char m_status;
    };
 
-   NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin);
+   NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin, int payload);
    void Init();
    void SetTXAddress(char* addr, int len);
    void SetRXAddress(char* addr, int len, int pipe);
@@ -57,9 +58,10 @@ private:
    // ExecuteCommand return status 
    void ExecuteCommand(char cmd, int len = 0);
    protocol::SPI m_spi;
+   int m_payload;
    gpio::IPinOutput& m_CE;
    char m_config;
-   static char buffer[kNRFPayload + 1];
+   static char buffer[NRF_BUFFER_SIZE + 1];
    Async_cb m_dr_cb;
 };
 

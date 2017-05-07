@@ -3,9 +3,12 @@
 #include <bcm2835.h>
 #include "gpio_rpi.h"
 #include <device/NRF24L01.h>
+#include <protocol/nrf_packet.hpp>
 #include <boost/format.hpp>
 #include <sys/epoll.h>
 #include <fcntl.h>
+#include <uart.h>
+#include <string.h>
 
 void init_hw()
 {
@@ -104,14 +107,31 @@ u_int cntr = 0;
 void data_ready()
 {
       auto status = nrf_ptr->Receive();
-      std::cout<< "received " << buf << " cnt: "<< ++cntr <<  std::endl;
+      std::string str_received(buf);
+      std::cout<< "received " << str_received<< " cnt: "<< ++cntr <<  std::endl;
       nrf_ptr->StandBy();
-      if(!nrf_ptr->SendString("PONG"))
+      std::string  str_to_send;
+      if (str_received == "PING")
+         str_to_send = "PONG";
+      else if (str_received == "PONG")
+         str_to_send = "PING";
+      else
+      {
+         str_to_send = "????";
+         std::cout << "Unknow signal received: " << str_received << std::endl;
+      }
+
+      std::cout << "Sending " << str_to_send << std::endl;
+      if(!nrf_ptr->SendString(str_to_send.c_str()))
          std:: cout << "Failed to send PONG\n";
       else
          std::cout << "Pong\n";
       nrf_ptr->Listen();
 }
+
+const uint8_t kPacketSize = 10;
+const char* kPing = "PING";
+const char* kPong = "PONG";
 
 int main()
 {
@@ -126,25 +146,26 @@ try
    protocol::SPI spi(&spi_pin);
    device::NRF24L01 nrf(spi, ce);
    nrf_ptr = &nrf;
-   buf = nrf.GetBufferPtr();
+   protocol::NrfPacket packet(nrf, kPacketSize);
+   char data_buffer[kPacketSize];
+   packet.SetDataPtr(data_buffer);
    GPIO gp(GPIO_IRQ);
    gp.set_edge(GPIO_EDGES::falling);
    gp.wait_for_edge();
-   auto status = nrf.ReadStatus();
-   if(!nrf_ptr->SendString("PONG"))
-      std:: cout << "Failed to send PONG\n";
-   else
-      std::cout << "Pong\n";
-   nrf.Listen();
-   nrf.ReceiveAsync(data_ready);
-   std::cout << "Listening for income signal\n";
    while(1)
-   {
-      gp.wait_for_edge();
-      if (nrf_ptr)
-      nrf_ptr->Async_ext_event();
-
-   }
+   {  
+      nrf.Listen();
+      packet.Receive();
+      nrf.StandBy();
+      serial << "received: " << data_buffer<< "\n";
+      memcpy(data_buffer, kPong, kPacketSize);
+      nrf.StartTransmit();
+      if (!packet.Transmit())
+         serial  << "Transmit failed\n";
+      else
+         serial << "sent " << kPong << "\n";
+      nrf.StandBy();
+   };
 }
 catch(const std::runtime_error& e)
 {

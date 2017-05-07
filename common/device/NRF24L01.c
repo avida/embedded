@@ -6,7 +6,7 @@ extern uart::UART serial;
 
 // Commands
 #define R_RX_PAYLOAD 0b01100001
-#define W_TX_PAYLOAD 0b10100000
+#define R_TX_PAYLOAD 0b10101000
 #define FLUSH_TX     0b11100001
 #define FLUSH_RX     0b11100010
 
@@ -21,8 +21,6 @@ extern uart::UART serial;
 #define REG_SETUP_AW  0x03
 #define REG_SETUP_RET 0x04
 #define REG_STATUS    0x07
-#define REG_OBSERVE_TX 0x08
-#define REG_FIFO_STATUS 0x17
 
 #define REG_RX_PW_P0  0x11
 
@@ -60,7 +58,7 @@ bool NRF24L01::NRFStatus::isTransmitted() { return m_status & TX_DS_BIT; }
 bool NRF24L01::NRFStatus::isTXFull() { return m_status & TX_FULL_BIT; }
 bool NRF24L01::NRFStatus::IsRetransmitExceed() { return m_status & MAX_RT_BIT; }
 
-char NRF24L01::buffer[kNRFPayload + 1] = {0x00};
+char NRF24L01::buffer[NRF_BUFFER_SIZE + 1] = {0x00};
 #define data_buffer (NRF24L01::buffer + 1)
 
 NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin):
@@ -72,7 +70,7 @@ NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin):
 void NRF24L01::Init()
 {
    utils::Delay_ms(11);
-   // enable autoacknowledgement
+   // disable autoacknowledgement
    data_buffer[0] = 1;
    WriteRegister(REG_EN_AA);
    data_buffer[0] = m_config;
@@ -123,7 +121,6 @@ void NRF24L01::SetRXAddress(char* addr, int len, int pipe)
 
 void NRF24L01::Listen()
 {
-
    data_buffer[0] = RX_CONFIG;
    WriteRegister(REG_CONFIG);
 
@@ -146,7 +143,7 @@ NRF24L01::NRFStatus NRF24L01::Receive()
    if (status.DataReadyPipe() == PIPE_EMPTY)
       return status;
    // read data
-   ExecuteCommand(R_RX_PAYLOAD, kNRFPayload);
+   ExecuteCommand(R_RX_PAYLOAD, m_payload);
    return NRF24L01::NRFStatus(buffer[0]);
 }
 
@@ -155,15 +152,20 @@ void NRF24L01::StartTransmit()
    // Go to TX mode
    // fill up FIFO
    // and set PRIM_RX to 0
+   data_buffer[0] = 0b11111111;
+   WriteRegister(REG_SETUP_RET);
+   // ExecuteCommand(R_TX_PAYLOAD, 1);
    data_buffer[0] = TX_CONFIG;
    WriteRegister(REG_CONFIG);
    m_CE = true;
-   utils::Delay_ms(10);
+   utils::Delay_us(10);
+   // m_CE = false;
+   utils::Delay_us(130);
 }
 
 NRF24L01::NRFStatus NRF24L01::Transmit()
 {
-   ExecuteCommand(W_TX_PAYLOAD, kNRFPayload);
+   ExecuteCommand(R_TX_PAYLOAD, m_payload);
    return NRF24L01::NRFStatus(buffer[0]);
 }
 
@@ -177,6 +179,7 @@ void NRF24L01::ResetTransmit()
 
 bool NRF24L01::SendString(const char *str)
 {
+   StartTransmit();
    auto buff = GetBufferPtr();
    strcpy(buff, str);
    StartTransmit();
@@ -195,13 +198,7 @@ bool NRF24L01::SendString(const char *str)
          }
       }
       status = ReadStatus();
-      /*
-      ReadRegister(REG_OBSERVE_TX);
-      auto obs = data_buffer[0];
-      ReadRegister(REG_FIFO_STATUS);
-      auto fifo = data_buffer[0];
-      serial << "send st: " << status.GetStatus() <<" obs: " <<obs << " fifo: " << fifo << "\n";
-      */
+      // serial << "send st: " << status.GetStatus() << "\n";
    }
    // serial << "send status: " << status.GetStatus() <<  " r:"<< retry_count <<"\n";
    ResetTransmit();
