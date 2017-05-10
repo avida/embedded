@@ -28,7 +28,7 @@ public:
       char m_status;
    };
 
-   NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin, int payload);
+   NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin);
    void Init();
    void SetTXAddress(char* addr, int len);
    void SetRXAddress(char* addr, int len, int pipe);
