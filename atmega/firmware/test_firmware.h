@@ -25,7 +25,7 @@ uart::UART serial;
 
 // #include "test/test_bmp180.h"
 
-#include "test/test_nrf.h"
+// #include "test/test_nrf.h"
 
 // #include "test/test_max7219.h"
 
@@ -38,6 +38,8 @@ uart::UART serial;
 // #include "test/test_pins.h"
 
 // #include "test_application.h"
+
+#include "test/test_hd44780.h"
 
 void fw_main()
 {
