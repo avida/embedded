@@ -3,7 +3,6 @@
 #define BAUD 115200
 #include <avr/io.h>
 #include <util/setbaud.h>
-#include <stdio.h>
 
 #define LF_CODE 10
 namespace uart
@@ -25,12 +24,6 @@ void uart_init(void) {
     UCSR0B = _BV(RXEN0) | _BV(TXEN0);   /* Enable RX and TX */
 }
 
-void uart_putchar(char c)
-{
-    loop_until_bit_is_set(UCSR0A, UDRE0); /* Wait until data register empty. */
-    UDR0 = c;
-}
-
 void uart_getchar(char& c)
 {
     // loop_until_bit_is_set(UCSR0A, RXC0); /* Wait until data register empty. */
@@ -38,24 +31,15 @@ void uart_getchar(char& c)
     c = UDR0;
 }
 
-void putString(const char *str)
-{
-   while(*str)
-   {
-      uart_putchar(*str);
-      str++;
-   }
-}
-
 UART::UART()
 {
   uart_init(); 
 }
 
-UART& UART::operator << (const char * str)
+void UART::PrintChar(char c)
 {
-  putString (str);
-  return *this;
+    loop_until_bit_is_set(UCSR0A, UDRE0); /* Wait until data register empty. */
+    UDR0 = c;
 }
 
 UART& UART::operator >> (char& chr)
@@ -78,26 +62,4 @@ UART& UART::operator >> (char * const str)
   str[ptr] = 0;
   return *this;
 }
-
-UART& UART::operator << (int num)
-{
-  sprintf(tmp, "%d", num);
-  putString (tmp);
-  return *this;
-}
-
-UART& UART::operator << (double num)
-{
-  sprintf(tmp, "%f", num);
-  putString (tmp);
-  return *this;
-}
-
-UART& UART::operator << (unsigned int num)
-{
-  sprintf(tmp, "%u", num);
-  putString (tmp);
-  return *this;
-}
-
 }

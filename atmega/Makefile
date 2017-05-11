@@ -21,10 +21,10 @@ DIRS = firmware \
 CFLAGS += -std=c++11 -fno-merge-constants
 CFLAGS += -funsigned-char -funsigned-bitfields -fshort-enums -Os $(foreach var,$(DEFINES), -D$(var))
 CFLAGS += -Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax
-# CFLAGS +=  -lm -Dprintf=iprintf -lprintf_flt 
+# CFLAGS +=  -Dprintf=iprintf
 INCLUDES+= -I.
 CFLAGS += $(INCLUDES)
-# LFLAGS = -Wl,-u,vfprintf
+# LFLAGS = -Wl,-u,vfprintf -lprintf_flt -lm
 168_LFLAGS = $(LFLAGS) -mmcu=atmega168 
 328_LFLAGS = $(LFLAGS) -mmcu=atmega328p
 
