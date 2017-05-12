@@ -1,10 +1,11 @@
 COMMON_DIR = ../common
 INCLUDES = -I$(COMMON_DIR) 
-COMMON_SOURCES =  rfid_reader.c\
-					  device/NRF24L01.c \
+COMMON_SOURCES = device/NRF24L01.c \
                  device/HD44780.c \
                  protocol/nrf_packet.c \
                  printable.c \
+                 device/MAX7219.c \
+                 # rfid_reader.c\
 					  # device/BMP180.c \
 					  # rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \
 					  # rc_decoder/rc_base_state_machine.c rc_decoder/rc_pulse.c \

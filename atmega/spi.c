@@ -2,7 +2,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <uart.h>
-extern uart::UART serial;
 
 // SS = PB2 (PIN 10)
 // MOSI = PB3 (PIN 11)
@@ -25,6 +24,11 @@ SPI::SPI(): m_control_pin(0)
    sei();
 }
 
+void SPI::SetControlPin(gpio::IPinOutput* control_pin)
+{
+   m_control_pin = control_pin;
+}
+
 void SPI::SetMaster(bool master)
 {
    if (master)
@@ -43,7 +47,7 @@ void SPI::SetMaster(bool master)
    }
 }
 
-void SPI::TranseferBytes(char *bytes, int length)
+void SPI::TransferBytes(char *bytes, int length)
 {
    if (m_control_pin)
       *m_control_pin = false;
@@ -62,13 +66,13 @@ void SPI::TranseferBytes(char *bytes, int length)
 void SPI::SendByte(char byte)
 { 
    char bt = byte;
-   TranseferBytes(&bt, 1);
+   TransferBytes(&bt, 1);
 }
 
 char SPI::ReceiveByte()
 {
    char bt = 0;
-   TranseferBytes(&bt, 1);
+   TransferBytes(&bt, 1);
    return bt;
 }
 

@@ -1,3 +1,5 @@
+# To flash a bootloader use this cmd:
+# avrdude -p atmega328p -c usbasp  -U flash:w:bootlader.hex
 CC = avr-g++
 AVR-OC = avr-objcopy
 F_CPU = 16000000

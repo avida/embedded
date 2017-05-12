@@ -100,13 +100,13 @@ int NRF24L01::PayloadWidth()
 void NRF24L01::WriteRegister(int address, int len)
 {
    buffer[0] = BUILD_WRITE_REG_CMD(address);
-   m_spi.TranseferBytes(buffer, len + 1);
+   m_spi.TransferBytes(buffer, len + 1);
 }
 
 void NRF24L01::ReadRegister(int address, int len)
 {
    buffer[0] = BUILD_READ_REG_CMD(address);
-   m_spi.TranseferBytes(buffer, len + 1);
+   m_spi.TransferBytes(buffer, len + 1);
 }
 
 void NRF24L01::SetTXAddress(char* addr, int len)
@@ -264,7 +264,7 @@ void NRF24L01::RetryTransmit()
 NRF24L01::NRFStatus NRF24L01::ReadStatus()
 {
    buffer[0] = NOP;
-   m_spi.TranseferBytes(buffer, 1);
+   m_spi.TransferBytes(buffer, 1);
    return NRF24L01::NRFStatus(buffer[0]);
 }
 
@@ -282,7 +282,7 @@ char* NRF24L01::GetBufferPtr()
 void NRF24L01::ExecuteCommand(char cmd, int len)
 {
    buffer[0] = cmd;
-   m_spi.TranseferBytes(buffer, len + 1);
+   m_spi.TransferBytes(buffer, len + 1);
 }
 
 } // namespace
