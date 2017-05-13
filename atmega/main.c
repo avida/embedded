@@ -6,7 +6,9 @@
 //#define F_CPU 16000000UL
 // led pin = PB5
 // #include "firmware/lamp_firmware.h"
-#include "firmware/test_firmware.h"
+// #include "firmware/test_firmware.h"
+#include "firmware/bicycle_fw.h"
+// uart::UART serial;
 
 int main(void) {
    fw_main();
