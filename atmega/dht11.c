@@ -21,7 +21,7 @@ namespace sensors
 {
 
 #define MAX_WAIT 255
-uint8_t signalDuration(gpio::Pin& pin)
+uint8_t signalDuration(gpio::atmega::Pin& pin)
 {
    TCNT0 = 0;
    bool signal = pin;
@@ -54,7 +54,7 @@ bool DHT11::ReadData()
    DHTSignal one;
    // set timer prescaler to 8
    TCCR0B = 1 << CS01; 
-   gpio::Pin pin(m_port, m_number);
+   gpio::atmega::Pin pin(m_port, m_number);
    pin.SetToOutput();
    // hold zero for 20 ms
    pin = false;

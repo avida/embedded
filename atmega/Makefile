@@ -10,7 +10,7 @@ SOURCES = main.c uart.c  utils.c atmega_pin.c \
 			 i2c.c \
 			 spi.c \
 			 firmware/lamp.c \
-			 # dht11.c \
+			 dht11.c \
 			 # pwm_rc_pin.c \
 
 include ../Makefile.common

@@ -5,6 +5,7 @@
 #include <util/setbaud.h>
 
 #define LF_CODE 10
+uart::UART serial;
 namespace uart
 {
 
