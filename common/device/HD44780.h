@@ -12,6 +12,7 @@ public:
            gpio::IPinOutput& rw,
            gpio::IPinOutput& e,
            gpio::IPinOutput** data_pins);
+   void Init();
    void SendData(uint8_t data);
    void SendCommand(uint8_t cmd);
    void Write8Bits(uint8_t bits);

@@ -7,8 +7,8 @@
 // led pin = PB5
 // #include "firmware/lamp_firmware.h"
 // #include "firmware/test_firmware.h"
-// #include "firmware/bicycle_fw.h"
-#include "firmware/greenhouse_fw.h"
+#include "firmware/bicycle_fw.h"
+// #include "firmware/greenhouse_fw.h"
 // uart::UART serial;
 
 int main(void) {

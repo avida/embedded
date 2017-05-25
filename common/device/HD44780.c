@@ -48,6 +48,10 @@ HD44780::HD44780(gpio::IPinOutput& rs,
         gpio::IPinOutput** data_pins):
          m_rs(rs), m_rw(rw), m_e(e), m_data_pins(data_pins)
 {
+}
+
+void HD44780::Init()
+{
    utils::Delay_ms(50);
    m_rs = false;
    m_e = false;

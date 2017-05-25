@@ -3,8 +3,6 @@
 #include "utils.h"
 #include <uart.h>
 
-uart::UART serial;
-
 char right_arrow[8] = {
 0b01100000,
 0b00110000,
@@ -41,8 +39,9 @@ void shiftChar(char * custom_char, bool left = false)
    }
 }
 
+// led pin
 gpio::atmega::Pin led(gpio::B, 5);
-// Disaply pins
+// Display control pins
 gpio::atmega::Pin rs(gpio::D, 3);
 gpio::atmega::Pin rw(gpio::D, 4);
 gpio::atmega::Pin e(gpio::D, 5);
@@ -56,36 +55,175 @@ gpio::atmega::Pin d7(gpio::B, 1);
 gpio::atmega::Pin left_btn(gpio::C, 1);
 gpio::atmega::Pin right_btn(gpio::C, 2);
 gpio::atmega::Pin menu_btn(gpio::C, 3);
-
-
-// Blinker spi control pin
+// Blinker control pins
 gpio::atmega::Pin cs_right(gpio::B, 2);
 gpio::atmega::Pin cs_left(gpio::C, 0);
 
-void DoBlink(device::MAX7219& blinker_left, device::MAX7219& blinker_right, bool left = true)
+gpio::IPinOutput* data_pins[4];
+device::HD44780 display(rs, rw, e, data_pins);
+
+protocol::SPI spi(&cs_right);
+device::MAX7219 blinker_right(spi, &cs_right);
+device::MAX7219 blinker_left(spi, &cs_left);
+
+void DoBlink(bool left = true)
 {
    char* display_char = left ? left_arrow : right_arrow;
    blinker_left.DrawCustomChar(display_char); 
    blinker_right.DrawCustomChar(display_char); 
-   utils::Delay_ms(70);
    shiftChar(display_char, left);
 }
 
+void onBlinkerLeft()
+{
+   display.SetCursor(0);
+   display << "<<<";
+   DoBlink();
+}
+
+void onBlinkerRight()
+{
+   display.SetCursor(13);
+   display << ">>>";
+   DoBlink(false);
+}
+
+void OnBlinkerRelease()
+{
+   display.SetCursor(0);
+   display.ClearChars(3);
+   display.SetCursor(13);
+   display.ClearChars(3);
+   blinker_left.ClearDisplay();
+   blinker_right.ClearDisplay();
+   serial << __FUNCTION__ << "\n";
+}
+
+void OnBtnPress()
+{
+   serial << __FUNCTION__ << "\n";
+}
+
+void OnBtnRelease()
+{
+   serial << __FUNCTION__ << "\n";
+}
+
+void OnBtnLongPress()
+{
+   serial << "Long press\n";
+   display.SetCursor(0);
+   display << "Menu mode";
+}
+
+enum InputStates
+{
+   ButtonDown,
+   ButtonUp,
+   ButtonLongPress
+};
+
+enum Modes
+{
+   Regular,
+   Setup   
+} mode;
+
+class InputProcessor
+{
+   const uint8_t kMinTicksForPress = 3;
+   const int kMinTicksForLongPress = 43;
+public:
+   InputProcessor(): m_current_btn(0), m_ticks_hold(0)
+   {}
+   void Process()
+   {
+      gpio::atmega::Pin* btn_on = 0;
+      if (left_btn)
+         btn_on = &left_btn;
+      else if (right_btn)
+         btn_on = &right_btn;
+      else if (menu_btn)
+         btn_on = &menu_btn;
+      else
+         m_ticks_hold = 0;
+
+      if (btn_on != &menu_btn && mode == Regular)
+      {
+         if (btn_on == 0)
+         {
+            if (m_current_btn != 0)
+            {
+               OnBlinkerRelease();
+               m_current_btn = 0;
+            }
+         }
+         else
+         {
+            if (!m_current_btn)
+               m_current_btn = btn_on;
+            if (m_current_btn == &left_btn)
+               onBlinkerLeft();
+            else if (m_current_btn == &right_btn)
+               onBlinkerRight();
+
+            // onblinker 
+         }
+      }
+      else
+      {
+         if (btn_on == 0)
+         {
+            m_ticks_hold = 0;
+            if (m_current_btn == 0)
+               return;
+            else
+            {
+               // Button released
+               if (++m_ticks_hold >= kMinTicksForPress)
+               {
+                  OnBtnPress();
+               }
+               else
+               {
+                  m_current_btn = 0;
+               }
+            }
+         }
+         else
+         {
+            // Button hold
+            if (m_ticks_hold >= kMinTicksForLongPress)
+            {
+               return;
+            }
+            // serial << m_ticks_hold << "\n";
+            if (m_current_btn == 0)
+               m_current_btn = btn_on;
+            if (++m_ticks_hold >= kMinTicksForLongPress)
+            {
+               OnBtnLongPress();
+               m_current_btn = 0;
+            }
+         }
+      }
+   }
+   gpio::atmega::Pin *m_current_btn;
+   int m_ticks_hold;
+} processor;
+
 void fw_main()
 {
-   gpio::IPinOutput* data_pins[4];
+   // Blinker spi control pin
    data_pins[0] = (gpio::IPinOutput*) &d4;
    data_pins[1] = (gpio::IPinOutput*) &d5;
    data_pins[2] = (gpio::IPinOutput*) &d6;
    data_pins[3] = (gpio::IPinOutput*) &d7;
+   display.Init();
 
-   device::HD44780 display(rs, rw, e, data_pins);
-   
    left_btn.SetToInput();
    right_btn.SetToInput();
-   protocol::SPI spi(&cs_right);
-   device::MAX7219 blinker_right(spi, &cs_right);
-   device::MAX7219 blinker_left(spi, &cs_left);
+   menu_btn.SetToInput();
    // serial << "start\n";
    blinker_left.ClearDisplay();
    blinker_right.ClearDisplay();
@@ -93,33 +231,7 @@ void fw_main()
    serial << "start\n";
    while(true)
    {
-      // serial << "check\n";
-      if (left_btn)
-      {
-         display.SetCursor(0);
-         display.ClearChars(5);
-         display.SetCursor(0);
-         display << "left";
-         DoBlink(blinker_left, blinker_right);
-      }
-      else if (right_btn)
-      {
-         display.SetCursor(0);
-         display.ClearChars(5);
-         display.SetCursor(0);
-         display << "right";
-         DoBlink(blinker_left, blinker_right, false);
-      }
-      else
-      {
-         display.SetCursor(0);
-         display.ClearChars(5);
-         display.SetCursor(0);
-         display << "Idle";
-         utils::Delay_ms(70);
-         blinker_left.ClearDisplay();
-         blinker_right.ClearDisplay();
-      }
+      processor.Process();
+      utils::Delay_ms(70);
    }
-
 }
