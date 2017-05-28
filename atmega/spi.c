@@ -38,13 +38,22 @@ void SPI::SetMaster(bool master)
       // 
       SPCR = (1<<SPE) |
              (1<<MSTR)|
-             (1<<SPR0);
+             (1<<SPR0)|
+             (1<<SPR1);
+       SPSR &= ~(1 << SPI2X);
    }
    else
    {
       DDRB = DDRB | (1 << PORT4);
       SPCR = (1<<SPE);
    }
+}
+
+char SPI::ExchangeChar(char in)
+{
+   SPDR = in;
+   while(!(SPSR & (1 <<SPIF)));
+   return SPDR;
 }
 
 void SPI::TransferBytes(char *bytes, int length)

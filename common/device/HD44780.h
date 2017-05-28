@@ -18,7 +18,7 @@ public:
    void Write8Bits(uint8_t bits);
    void Write4Bits(uint8_t data);
    void SetCursor(uint8_t line, uint8_t col = 0);
-   void ClearChars(uint8_t size);
+   void ClearChars(uint8_t size = 16);
 
 private:
    void PrintChar(char ch);

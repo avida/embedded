@@ -5,6 +5,7 @@ COMMON_SOURCES = device/NRF24L01.c \
                  protocol/nrf_packet.c \
                  printable.c \
                  device/MAX7219.c \
+                 device/sdcard.c \
                  # rfid_reader.c\
 					  # device/BMP180.c \
 					  # rc_decoder/rc_decoder.c rc_decoder/rc_transmitter.c \

@@ -2,6 +2,8 @@
 #include "device/HD44780.h"
 #include "utils.h"
 #include <uart.h>
+#include <i2c.h>
+#include <device/sdcard.h>
 
 char right_arrow[8] = {
 0b01100000,
@@ -24,7 +26,8 @@ char left_arrow[8] = {
 0b00001100,
 0b00000110,
 };
-
+#define SD_BUFFER_SIZE 512
+char sd_buffer [SD_BUFFER_SIZE];
 void shiftChar(char * custom_char, bool left = false)
 {
    for(auto i = 0; i < 8; i++)
@@ -41,6 +44,8 @@ void shiftChar(char * custom_char, bool left = false)
 
 // led pin
 gpio::atmega::Pin led(gpio::B, 5);
+// sd card control pin
+gpio::atmega::Pin sdcard_cs(gpio::D, 2);
 // Display control pins
 gpio::atmega::Pin rs(gpio::D, 3);
 gpio::atmega::Pin rw(gpio::D, 4);
@@ -65,6 +70,20 @@ device::HD44780 display(rs, rw, e, data_pins);
 protocol::SPI spi(&cs_right);
 device::MAX7219 blinker_right(spi, &cs_right);
 device::MAX7219 blinker_left(spi, &cs_left);
+device::SDCard sdcard(spi, (gpio::IPinOutput*) &sdcard_cs);
+
+enum InputStates
+{
+   ButtonDown,
+   ButtonUp,
+   ButtonLongPress
+};
+
+enum Modes
+{
+   Regular,
+   Setup   
+} mode;
 
 void DoBlink(bool left = true)
 {
@@ -112,22 +131,24 @@ void OnBtnRelease()
 void OnBtnLongPress()
 {
    serial << "Long press\n";
-   display.SetCursor(0);
-   display << "Menu mode";
+   if (menu_btn)
+   {
+      display.SetCursor(0);
+      display.ClearChars();
+      if (mode == Regular)
+      {
+         mode = Setup;
+         display.SetCursor(0);
+         display << "Menu mode";
+       }
+      else
+      {
+         mode = Regular;
+         display.SetCursor(5);
+         display << "Blinker";
+      }
+   }
 }
-
-enum InputStates
-{
-   ButtonDown,
-   ButtonUp,
-   ButtonLongPress
-};
-
-enum Modes
-{
-   Regular,
-   Setup   
-} mode;
 
 class InputProcessor
 {
@@ -150,71 +171,93 @@ public:
 
       if (btn_on != &menu_btn && mode == Regular)
       {
-         if (btn_on == 0)
+         ProcessBlinkMode(btn_on);
+      }
+      else
+      {
+         ProcessMenuMode(btn_on);
+      }
+   }
+private:
+   void ProcessBlinkMode(gpio::atmega::Pin* btn_on)
+   {
+      if (btn_on == 0)
+      {
+         if (m_current_btn != 0)
          {
-            if (m_current_btn != 0)
-            {
-               OnBlinkerRelease();
-               m_current_btn = 0;
-            }
-         }
-         else
-         {
-            if (!m_current_btn)
-               m_current_btn = btn_on;
-            if (m_current_btn == &left_btn)
-               onBlinkerLeft();
-            else if (m_current_btn == &right_btn)
-               onBlinkerRight();
-
-            // onblinker 
+            OnBlinkerRelease();
+            m_current_btn = 0;
          }
       }
       else
       {
-         if (btn_on == 0)
-         {
-            m_ticks_hold = 0;
-            if (m_current_btn == 0)
-               return;
-            else
-            {
-               // Button released
-               if (++m_ticks_hold >= kMinTicksForPress)
-               {
-                  OnBtnPress();
-               }
-               else
-               {
-                  m_current_btn = 0;
-               }
-            }
-         }
+         if (!m_current_btn)
+            m_current_btn = btn_on;
+         if (m_current_btn == &left_btn)
+            onBlinkerLeft();
+         else if (m_current_btn == &right_btn)
+            onBlinkerRight();
+
+         // onblinker 
+      }
+   }
+
+   void ProcessMenuMode(gpio::atmega::Pin* btn_on)
+   {
+      if (btn_on == 0)
+      {
+         m_ticks_hold = 0;
+         if (m_current_btn == 0)
+            return;
          else
          {
-            // Button hold
-            if (m_ticks_hold >= kMinTicksForLongPress)
+            // Button released
+            if (++m_ticks_hold >= kMinTicksForPress)
             {
-               return;
+               OnBtnPress();
             }
-            // serial << m_ticks_hold << "\n";
-            if (m_current_btn == 0)
-               m_current_btn = btn_on;
-            if (++m_ticks_hold >= kMinTicksForLongPress)
+            else
             {
-               OnBtnLongPress();
                m_current_btn = 0;
             }
+         }
+      }
+      else
+      {
+         // Button hold
+         if (m_ticks_hold >= kMinTicksForLongPress)
+         {
+            return;
+         }
+         // serial << m_ticks_hold << "\n";
+         if (m_current_btn == 0)
+            m_current_btn = btn_on;
+         if (++m_ticks_hold >= kMinTicksForLongPress)
+         {
+            OnBtnLongPress();
+            m_current_btn = 0;
          }
       }
    }
    gpio::atmega::Pin *m_current_btn;
    int m_ticks_hold;
 } processor;
+const char SLAVE_ADDRESS = 0x27;
 
 void fw_main()
 {
    // Blinker spi control pin
+   sdcard.Init();
+   while(true);
+   protocol::I2C i2c(SLAVE_ADDRESS);
+   char bt = 0xff;
+   i2c.Transmit(&bt, 1);
+   serial << "end\n";
+   while(true);
+   {
+      serial << "Listen\n";
+      i2c.Listen();
+   }
    data_pins[0] = (gpio::IPinOutput*) &d4;
    data_pins[1] = (gpio::IPinOutput*) &d5;
    data_pins[2] = (gpio::IPinOutput*) &d6;
@@ -227,11 +270,13 @@ void fw_main()
    // serial << "start\n";
    blinker_left.ClearDisplay();
    blinker_right.ClearDisplay();
+   display.SetCursor(4);
    display << "start";
    serial << "start\n";
    while(true)
    {
       processor.Process();
       utils::Delay_ms(70);
+      sd_buffer[SD_BUFFER_SIZE - 1] = 0xda;
    }
 }

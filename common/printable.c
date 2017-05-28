@@ -32,3 +32,10 @@ Printable& Printable::operator << (unsigned int ui)
   *this << tmp;
   return *this;
 }
+
+Printable& Printable::operator << (unsigned long l)
+{
+  sprintf(tmp, "%lu", l);
+  *this << tmp;
+  return *this;
+}

@@ -13,6 +13,7 @@ public:
    void SendByte(char byte);
    char ReceiveByte();
    void TransferBytes(char *bytes, int length);
+   char ExchangeChar(char in);
 private:
    void SetMaster(bool master);
    gpio::IPinOutput* m_control_pin;
