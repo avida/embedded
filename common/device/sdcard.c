@@ -5,6 +5,7 @@
 
 // Some copy-paste from Arduino Sd2Card Library
 // Got tired of reading docs :(
+
 typedef struct CSDV1 {
   // byte 0
   unsigned reserved1 : 6;
@@ -130,11 +131,21 @@ union csd_t {
 
 const uint8_t CMD_INIT = 0;
 const uint8_t CMD_SPI_MODE = 1;
+const uint8_t CMD_CHECK_VER = 8;
 const uint8_t CMD_GET_CSD = 9;
 const uint8_t CMD_SET_SECTOR_SZ = 16;
 const uint8_t CMD_READ_BLOCK = 17;
 const uint8_t CMD_WRITE_BLOCK = 24;
 
+const uint8_t R1_RDY_STATE = 0X00;
+const uint8_t R1_IDLE_STATE = 0X01;
+const uint8_t R1_ILLEGAL_COMMAND = 0X04;
+const uint8_t DATA_START_BLOCK = 0XFE;
+
+const uint8_t NOT_READY_BYTE  = 0xFF;
+
+const uint8_t DATA_RES_MASK = 0X1F;
+const uint8_t DATA_RES_ACCEPTED = 0X05;
 namespace device
 {
 
@@ -161,8 +172,10 @@ void printBuf(const char *buf, uint8_t len)
    serial << "\n";
 }
 
-#define DATA_READY_RESP 0xfe
-#define NOT_READY_BYTE 0xff
+char * SDCard::GetBufferPtr()
+{
+   return sector_buf;
+}
 
 char SDCard::WaitForResponse(int max)
 {
@@ -170,6 +183,7 @@ char SDCard::WaitForResponse(int max)
    while(--max >= 0)
    {
       resp = m_spi.ExchangeChar(NOT_READY_BYTE);
+      // serial << "wresp:" << resp << "\n";
       if (resp != NOT_READY_BYTE)
          return resp;
    }
@@ -180,7 +194,9 @@ bool SDCard::WaitByte(char byte, int max)
 {
    while(--max >= 0)
    {
-      if (m_spi.ExchangeChar(NOT_READY_BYTE) == byte)
+      auto bt = m_spi.ExchangeChar(NOT_READY_BYTE);
+      // serial << "bt: " << bt << "\n";
+      if (bt == byte)
          return true;
    }
    return false;
@@ -188,9 +204,8 @@ bool SDCard::WaitByte(char byte, int max)
 
 uint32_t SDCard::GetSize()
 {
-   SendCommand(CMD_GET_CSD, 0);
-   auto resp = WaitForResponse();
-   if (!WaitByte(DATA_READY_RESP))
+   auto resp = SendCommand(CMD_GET_CSD, 0);
+   if (!WaitByte(DATA_START_BLOCK))
       serial << "error reading csd\n";
    memset(sector_buf, 0xff, 16);
    m_spi.TransferBytes(sector_buf, 16);
@@ -212,6 +227,11 @@ uint32_t SDCard::GetSize()
   }
 }
 
+bool SDCard::RepeateCmdUntil(uint8_t cmd, uint32_t params, uint8_t resp, int max)
+{
+   return 0;
+}
+
 void SDCard::Init()
 {
    m_spi.SetControlPin();
@@ -219,51 +239,142 @@ void SDCard::Init()
    for (auto i = 0; i < 10; ++i )
       m_spi.ExchangeChar(0xff);
 
-   *m_cs = false;
-   SendCommand(CMD_INIT, 0);
-   auto resp = WaitForResponse();
-   
-   serial <<"cmd: " << 0 << " responce: " << resp << "\n";
-   SendCommand(CMD_SPI_MODE, 0);
-   resp = WaitForResponse();
-   serial <<"cmd: " << 1 << " responce: " << resp << "\n";
-   *m_cs = true;
-   *m_cs = false;
-   SendCommand(CMD_SET_SECTOR_SZ, SDCARD_SECTOR_SIZE);
-   resp = WaitForResponse();
-   serial <<"cmd: " << 16 << " responce: " << resp << "\n";
+   auto cnt = 0;
 
+   while(SendCommand(CMD_INIT, 0) != R1_IDLE_STATE && ++cnt < 100);
+      
+   auto resp = SendCommand(CMD_CHECK_VER, 0x1aa);
+   if (resp == R1_ILLEGAL_COMMAND)
+   {
+      m_type = SD1;
+   }
+   else
+   {
+      for (uint8_t i = 0; i < 3; i++)m_spi.ExchangeChar(0xff);
+      resp = m_spi.ExchangeChar(0xff);
+      if (resp != 0xaa)
+      {
+         serial <<resp <<  " Unknown sdcard type\n";
+         m_type = Unknown;
+         return;
+      }
+      m_type = SD2;
+   }
+   // resp = SendCommand(CMD_SET_SECTOR_SZ, SDCARD_SECTOR_SIZE);
+   cnt = 0;
+   while(SendACommand(41, m_type == SD2 ?  0X40000000 : 0) != 0x00)
+   {
+      if (++cnt > 255)
+      {
+         serial << "Failed to init card\n";
+         m_type = Unknown;
+         return;
+      }
+   }
+   if (m_type == SD2)
+   {
+      if (SendCommand(58, 0) != 0)
+      {
+         serial << "Error: " <<__LINE__ << "\n";
+         m_type = Unknown;
+         return;
+      }
+      resp = m_spi.ExchangeChar(0xff);
+      if (resp == 0xc0)
+      {
+         // serial << "SDHc\n";
+         m_type = SDHC;
+      }
+      for (uint8_t i = 0; i < 3; i++) m_spi.ExchangeChar(0xff);
+      
+   }
+ 
+   // SendCommand(CMD_SET_SECTOR_SZ, SDCARD_SECTOR_SIZE);
+   
    serial << "size: " << GetSize() << "\n";
-   // printBuf(sector_buf, 16);
-   // resp = WaitForResponse();
-   // serial <<"cmd: " << 17 << " responce: " << resp << "\n";
-   // resp = WaitForResponse();
-   // serial <<"cmd: " << 17 << " responce: " << resp << "\n";
    *m_cs = true;
 }
 
-void SDCard::WriteSector(uint16_t sector)
+bool SDCard::WriteSector(uint32_t sector)
 {
+   if (m_type != SDHC)
+      sector *= SDCARD_SECTOR_SIZE;
+   if (SendCommand(CMD_WRITE_BLOCK, sector))
+   {
+      serial << "error writing data\n";
+      *m_cs = true;
+      return false;
+   }
+   m_spi.ExchangeChar(DATA_START_BLOCK);
+   m_spi.TransferBytes(sector_buf, SDCARD_SECTOR_SIZE);
+   // dummy crc
+   m_spi.ExchangeChar(0xff);
+   m_spi.ExchangeChar(0xff);
+   auto resp = m_spi.ExchangeChar(0xff);
+   if ( (resp & DATA_RES_MASK) != DATA_RES_ACCEPTED)
+   {
+      serial << "write resp: " << resp << "\n";
+      *m_cs = true;
+      return false;
+   }
+
+   if (WaitByte(NOT_READY_BYTE))
+   {
+      *m_cs = true;
+      serial << "error waiting responce\n";
+      return false;
+   }
+   *m_cs = true;
 
 }
 
 void SDCard::ReadSector(int16_t sector)
 {
+   uint32_t params = sector;
+   if (m_type != SDHC)
+      params *= SDCARD_SECTOR_SIZE;
+   SendCommand(CMD_READ_BLOCK, params);
 
+   if (!WaitByte(DATA_START_BLOCK,250))
+      serial << "Error reading data\n";
+   
+   memset(sector_buf, 0xff, 20);
+   m_spi.TransferBytes(sector_buf, 20);
+   printBuf(sector_buf, 20);
 }
 
-void SDCard::SendCommand(uint8_t cmd, uint32_t parameters)
+char SDCard::SendCommand(uint8_t cmd, uint32_t parameters)
 {
+   *m_cs = false;
    spiCmd.cmd = 0x40 | cmd;
    spiCmd.parameters[0] = parameters >> 24 & 0xff;
    spiCmd.parameters[1] = parameters >> 16 & 0xff;
    spiCmd.parameters[2] = parameters >> 8 & 0xff;
    spiCmd.parameters[3] = parameters & 0xff;
-
-   spiCmd.crc = cmd == 0 ? 0x95 : 0xff;
-   serial << cmd << ": "  << spiCmd.cmdBuffer[1] << " " << spiCmd.cmdBuffer[2] << " "<< spiCmd.cmdBuffer[3] << " " << spiCmd.cmdBuffer[4] << "\n";
+   if (!WaitByte(0xff))
+      return 0xff;
+   switch (cmd)
+   {
+      case CMD_INIT:
+         spiCmd.crc = 0x95;
+         break;
+      case CMD_CHECK_VER:
+         spiCmd.crc = 0x87;
+         break;
+      default:
+         spiCmd.crc = 0xff;
+   }
    m_spi.TransferBytes(spiCmd.cmdBuffer, 6);
+   auto resp = WaitForResponse();
+   // serial << "cmd: " << cmd << "\n";
+   // serial << "resp: " << resp << "\n";
+   return resp;
    // *m_cs = true;
+}
+char SDCard::SendACommand(uint8_t cmd, uint32_t params)
+{
+   SendCommand(55,0);
+   return SendCommand(cmd, params);
 }
 
 }

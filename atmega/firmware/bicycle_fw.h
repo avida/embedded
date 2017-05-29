@@ -248,6 +248,12 @@ void fw_main()
 {
    // Blinker spi control pin
    sdcard.Init();
+   if (sdcard.GetType() == device::Unknown)
+   {
+      serial << "Error initializing card\n";
+      return;
+   }
+   sdcard.WriteSector(0);
    while(true);
    protocol::I2C i2c(SLAVE_ADDRESS);
    char bt = 0xff;
