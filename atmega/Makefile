@@ -39,6 +39,11 @@ $(eval PATH=$(TOOLCHAIN_DIR);$(PATH))
 
 all:
 	mkdir -p $(OBJ_SUBDIRS)
+ifneq ($(shell cat .DEFINES), $(DEFINES))
+	rm -rf $(OBJDIR)/*
+	echo $(DEFINES) > .DEFINES
+endif
+	mkdir -p $(OBJ_SUBDIRS) 
 	mingw32-make flash TARGET=m328
 
 m168:

@@ -32,6 +32,8 @@ extern uart::UART serial;
       return false;        \
    }
 
+#define GETSTATUS (TWSR & 0xf8)
+
 namespace protocol
 {
 
@@ -42,32 +44,139 @@ I2C::I2C():m_address(0)
 
 I2C::I2C(char address):m_address(address)
 {
-   Init();
+   Init(false);
 }
 
-void I2C::Init()
+void I2C::Init(bool master)
 {
-   gpio::atmega::Pin sda(gpio::C, 4);
-   gpio::atmega::Pin scl(gpio::C, 5);
-   sda = true;
-   scl = true;
 
    TWSR = 0;
-   TWBR = 0x0C;
+   TWBR = 0x0;
    TWCR = _BV(TWEN);
+   TWSR = 3;
+   if (master)
+   {
+      gpio::atmega::Pin sda(gpio::C, 4);
+      gpio::atmega::Pin scl(gpio::C, 5);
+      sda = true;
+      scl = true;
+   }
+   else
+   {
+      TWAR = m_address << 1;
+      TWCR |= _BV(TWEA);
+   }
 }
 
-char I2C::Listen()
+bool I2C::Receive(char *buffer, uint8_t* len)
 {
-   if (!m_address) return false;
-   TWAR = m_address << 1;
-   serial << "wait\n";
-   TWCR_WAIT()
-   serial << "status: " << TWSR << "\n";
-   return TWSR;
-}  
+   uint8_t ln = *len;
+   *len = 0;
+   while(ln > 0)
+   {
+      TWCR_WAIT()
+      serial << "status: " << GETSTATUS << "\n";
+      switch (GETSTATUS)
+      {
+         case TW_SR_SLA_ACK:
+            TWCR = TWCR;
+         break;
+         case TW_SR_DATA_ACK:
+            buffer[*len] = TWDR;
+            *len += 1;
+            ln--;
+            TWCR = TWCR | _BV(TWEA);
+         break;
+         case TW_SR_STOP:
+            TWCR = TWCR;
+            return true;
+         break;
+         default:
+            TWCR = TWCR | _BV(TWSTO);
+            return false;
+      }
+      // TWCR = TWCR;
+   }
+   return false;
+}
 
-bool I2C::Receive(char* data, uint8_t len)
+bool I2C::SlaveSendData(const char * data, uint8_t len)
+{
+   while(len)
+   {
+      TWCR_WAIT()
+      serial << "Send status: " << GETSTATUS << "\n";
+      switch (GETSTATUS)
+      {
+         case (TW_ST_SLA_ACK):
+         case (TW_ST_DATA_ACK):
+            TWDR = *data;
+            data++;
+            len --;
+            TWCR = TWCR;
+            break;
+         case (TW_ST_DATA_NACK):
+         case (TW_ST_LAST_DATA):
+            TWCR = TWCR;
+            TWCR_WAIT()
+            return true;
+         default:
+            TWCR = TWCR | _BV(TWSTO) | _BV(TWEA);
+            return false;
+      }
+   }
+   if (len == 0)
+   {
+      serial << "wait end\n";
+      TWCR_WAIT()
+      serial << "end status: " << GETSTATUS << "\n";
+      if (GETSTATUS != TW_ST_DATA_NACK &&
+          GETSTATUS != TW_ST_LAST_DATA)
+      {
+         serial << "Buffer size too short, possible data lost\n";
+         TWCR = TWCR;
+         return false;
+      }
+      TWCR = TWCR;
+      return true;
+   }
+}
+
+void I2C::ListenForCommand(cmdProcessor cb)
+{
+   char cmd;
+   uint8_t len = 1;
+   Receive(&cmd, &len);
+   if (len == 0)
+   {
+      serial << "Error receiving command \n";
+      return;
+   }
+   TWCR = TWCR;
+   serial << "st: " << GETSTATUS << "\n";
+   TWCR_WAIT()
+   if(GETSTATUS != TW_SR_STOP)
+   {
+      serial << "cmd should be 1 byte long\n";
+      return;
+   }
+   TWCR = TWCR;
+   serial << "cmd is " << cmd << "\n";
+   const char * s = "fuuuck";
+   SlaveSendData(s, 10);
+
+}
+
+// char I2C::Listen()
+// {
+//    serial << "wait\n";
+//    TWCR_WAIT()
+//    serial << "status: " << TWSR << "\n";
+//    TWCR = TWCR;
+//    return TWSR;
+// }  
+
+bool I2C::Read(char* data, uint8_t len)
 {
    START_TRANSMIT()
    CHECK_TWSR_ERR_CODE(TW_START)
@@ -140,7 +249,7 @@ bool I2C::ReadRegister(uint8_t reg, char* data, uint8_t len)
    return true;
 }
 
-bool I2C::Transmit(char* data, uint8_t len)
+bool I2C::Transmit(const char* data, uint8_t len)
 {
    // serial << "start\n";
    START_TRANSMIT()

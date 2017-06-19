@@ -2,6 +2,7 @@ COMMON_DIR = ../common
 INCLUDES = -I$(COMMON_DIR) 
 COMMON_SOURCES = device/NRF24L01.c \
                  device/HD44780.c \
+                 device/mfrc522.c \
                  protocol/nrf_packet.c \
                  printable.c \
                  device/MAX7219.c \

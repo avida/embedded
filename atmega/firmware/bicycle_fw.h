@@ -4,6 +4,7 @@
 #include <uart.h>
 #include <i2c.h>
 #include <device/sdcard.h>
+#include <string.h>
 
 char right_arrow[8] = {
 0b01100000,
@@ -44,6 +45,7 @@ void shiftChar(char * custom_char, bool left = false)
 
 // led pin
 gpio::atmega::Pin led(gpio::B, 5);
+// gpio::atmega::Pin led2(gpio::B, 5);
 // sd card control pin
 gpio::atmega::Pin sdcard_cs(gpio::D, 2);
 // Display control pins
@@ -64,8 +66,12 @@ gpio::atmega::Pin menu_btn(gpio::C, 3);
 gpio::atmega::Pin cs_right(gpio::B, 2);
 gpio::atmega::Pin cs_left(gpio::C, 0);
 
-gpio::IPinOutput* data_pins[4];
-device::HD44780 display(rs, rw, e, data_pins);
+gpio::IPinOutput* data_pins[3];
+// uint8_t* bt;
+
+protocol::I2C i2c(0x27);
+
+device::HD44780 display(rs, rw, e, &i2c);
 
 protocol::SPI spi(&cs_right);
 device::MAX7219 blinker_right(spi, &cs_right);
@@ -244,30 +250,35 @@ private:
 } processor;
 const char SLAVE_ADDRESS = 0x27;
 
+#include <avr/pgmspace.h>
+
+char * const start_str PROGMEM = "start";
+
 void fw_main()
 {
    // Blinker spi control pin
-   sdcard.Init();
-   if (sdcard.GetType() == device::Unknown)
+   // sdcard.Init();
+   // if (sdcard.GetType() == device::Unknown)
+   // {
+   //    serial << "Error initializing card\n";
+   //    return;
+   // }
+   // sdcard.WriteSector(0);
+   // while(true);
+
+   char bt[8];
+   memset(bt, 0xff, 1);
+   auto cnt = 2;
+   while(cnt > 0)
    {
-      serial << "Error initializing card\n";
-      return;
+      i2c.Transmit(bt,  1);
+      serial << "end\n";
+      cnt --;
    }
-   sdcard.WriteSector(0);
-   while(true);
-   protocol::I2C i2c(SLAVE_ADDRESS);
-   char bt = 0xff;
-   i2c.Transmit(&bt, 1);
-   serial << "end\n";
-   while(true);
-   {
-      serial << "Listen\n";
-      i2c.Listen();
-   }
-   data_pins[0] = (gpio::IPinOutput*) &d4;
-   data_pins[1] = (gpio::IPinOutput*) &d5;
-   data_pins[2] = (gpio::IPinOutput*) &d6;
-   data_pins[3] = (gpio::IPinOutput*) &d7;
+   // data_pins[0] = (gpio::IPinOutput*) &d4;
+   // data_pins[1] = (gpio::IPinOutput*) &d5;
+   // data_pins[2] = (gpio::IPinOutput*) &d6;
+   // data_pins[3] = (gpio::IPinOutput*) &d7;
    display.Init();
 
    left_btn.SetToInput();
@@ -277,8 +288,8 @@ void fw_main()
    blinker_left.ClearDisplay();
    blinker_right.ClearDisplay();
    display.SetCursor(4);
-   display << "start";
-   serial << "start\n";
+   display << start_str;
+   serial << start_str << "\n";
    while(true)
    {
       processor.Process();

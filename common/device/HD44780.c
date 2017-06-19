@@ -39,16 +39,29 @@
 #define LCD_5x10DOTS 0x04
 #define LCD_5x8DOTS 0x00
 
+const char I2C_ADDRESS = 0x27;
+
+#define RS_BIT 0x1
+#define RW_BIT 0x2
+#define E_BIT 0x4
+#define BL_BIT 0x8
+
 namespace device
 {
 
 HD44780::HD44780(gpio::IPinOutput& rs,
         gpio::IPinOutput& rw,
-        gpio::IPinOutput& e,
-        gpio::IPinOutput** data_pins):
-         m_rs(rs), m_rw(rw), m_e(e), m_data_pins(data_pins)
-{
-}
+        gpio::IPinOutput& e)
+        :
+         m_rs(rs), m_rw(rw), m_e(e), m_i2c(0)
+{}
+
+HD44780::HD44780(gpio::IPinOutput& rs,
+           gpio::IPinOutput& rw,
+           gpio::IPinOutput& e,
+           protocol::I2C* i2c):
+         m_rs(rs), m_rw(rw), m_e(e), m_i2c(i2c)
+{}
 
 void HD44780::Init()
 {
@@ -56,6 +69,7 @@ void HD44780::Init()
    m_rs = false;
    m_e = false;
    m_rw = false;
+   m_i2c->SetAddress(I2C_ADDRESS);
    // init 4 bits transfer mode
    Write4Bits(0x03);
    utils::Delay_us(4500);
@@ -99,11 +113,26 @@ void HD44780::Write8Bits(uint8_t bits)
 
 void HD44780::Write4Bits(uint8_t data)
 {
-   for(auto i=0; i< 4; i++)
+   if (m_i2c)
    {
-      *(m_data_pins[i]) = (data >> i) & 0x01;
+      char bt = (data << 4) | BL_BIT | (m_rs ? RS_BIT : 0);
+
+      // m_i2c->Transmit(&bt,1);
+      //  utils::Delay_us(1);
+
+      bt |= E_BIT;
+      m_i2c->Transmit(&bt,1);
+      bt &= ~E_BIT;
+      m_i2c->Transmit(&bt,1);
+      // utils::Delay_us(100);
    }
-   WritePulse();
+   else
+   {
+      for(auto i=0; i< 4; i++)
+      {
+      }
+      WritePulse();
+   }
 }
 
 void HD44780::SetCursor(uint8_t line, uint8_t col)

@@ -1,6 +1,8 @@
 #pragma once
+
 #include "printable.h"
 #include "atmega_pin.h"
+#include <i2c.h>
 
 namespace device
 {
@@ -10,8 +12,12 @@ class HD44780: public Printable
 public:
    HD44780(gpio::IPinOutput& rs,
            gpio::IPinOutput& rw,
+           gpio::IPinOutput& e
+);
+  HD44780(gpio::IPinOutput& rs,
+           gpio::IPinOutput& rw,
            gpio::IPinOutput& e,
-           gpio::IPinOutput** data_pins);
+           protocol::I2C* i2c);
    void Init();
    void SendData(uint8_t data);
    void SendCommand(uint8_t cmd);
@@ -24,7 +30,7 @@ private:
    void PrintChar(char ch);
    void WritePulse();
    gpio::IPinOutput& m_rs, &m_rw, &m_e;
-   gpio::IPinOutput** m_data_pins;
+   protocol::I2C* m_i2c;
 };
 
 }
