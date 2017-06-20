@@ -6,13 +6,11 @@
 
 const char SLAVE_ADDRESS = 0xa;
 
-
 void test_main()
 {
 
-#ifndef TEST_SEND
+#ifdef TEST_A
    protocol::I2C i2c(SLAVE_ADDRESS);
-   char buffer[10];
    char index = 0;
    while(true)
    {
@@ -21,25 +19,20 @@ void test_main()
       // i2c.Receive(buffer, &sz);
       // if (sz)
       //    serial << strlen(buffer) <<  " " << buffer <<"\n";
-
-      i2c.SlaveSendData(&index, 1);
-      index = index > 31 ? 0 : index + 1;
+      i2c.SendASync(&index, 1);
+      while(!i2c.IsSent());
+      index = index >= 31 ? 0 : index + 1;
       // i2c.ListenForCommand(NULL);
    }
 #else
-   protocol::I2C i2c;
-   char addr = SLAVE_ADDRESS;
-   i2c.SetAddress(addr);
-   serial << addr <<"\n";
+   protocol::I2C i2c(SLAVE_ADDRESS + 1);
+   serial << "hello 2\n";
+   char index = 0;
    while(true)
    {
-      serial << "TRansmiting\n";
-      const char* st PROGMEM = "Hell Yeah";
-      char buffer[10];
-      i2c.ReadRegister(42, buffer,  sizeof(buffer));
-      serial << buffer << "\n";
-      serial << "TRansmited\n";
-      break;
+       i2c.SendASync(&index, 1);
+      while(!i2c.IsSent());
+      index = index >= 31 ? 0 : index + 1;
    }
 #endif
 }

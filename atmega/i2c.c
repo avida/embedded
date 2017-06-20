@@ -4,6 +4,7 @@
 // sda = PC4 = A4
 // scl = PC5 = A5
 #include "atmega_pin.h"
+#include <avr/interrupt.h>
 
 #ifndef TWI_FREQ
 #define TWI_FREQ 100000L
@@ -14,7 +15,7 @@
 extern uart::UART serial;
 
 #define TWCR_WAIT() \
-      while(! (TWCR  & (1 << TWINT)) ); 
+      while(! (TWCR  & (1 << TWINT)) );
 
 #define START_TRANSMIT() \
       TWCR =  1 << TWINT | 1 << TWEN | 1 <<TWSTA | 1<< TWEA; \
@@ -49,10 +50,9 @@ I2C::I2C(char address):m_address(address)
 
 void I2C::Init(bool master)
 {
-
    TWSR = 0;
    TWBR = 0x0;
-   TWCR = _BV(TWEN);
+   TWCR = _BV(TWEN) | _BV(TWIE);
    TWSR = 3;
    if (master)
    {
@@ -68,8 +68,11 @@ void I2C::Init(bool master)
    }
 }
 
+
+
 bool I2C::Receive(char *buffer, uint8_t* len)
 {
+
    uint8_t ln = *len;
    *len = 0;
    while(ln > 0)
@@ -100,25 +103,70 @@ bool I2C::Receive(char *buffer, uint8_t* len)
    return false;
 }
 
+const char *m_data;
+volatile int m_len;
+
+void I2C::SendASync(const char *data, uint8_t len )
+{
+   m_data = data;
+   m_len = len;
+   sei();
+   TWCR = TWCR | _BV(TWIE);
+}
+
+
+bool I2C::IsSent()
+{
+   return m_len < 0;
+}
+
+ISR(TWI_vect)
+{
+   cli();
+   if (! (TWCR  & (1 << TWINT)))
+      return;
+   // serial << GETSTATUS << "\n";
+   switch (GETSTATUS)
+   {
+      case (TW_ST_SLA_ACK):
+      case (TW_ST_DATA_ACK):
+         TWDR = *m_data;
+         m_data++;
+         TWCR = TWCR;
+         break;
+      case (TW_ST_DATA_NACK):
+      case (TW_ST_LAST_DATA):
+         TWCR = TWCR;
+         // TWCR_WAIT()
+         break;
+      default:
+         TWCR = TWCR | _BV(TWSTO) | _BV(TWEA);
+   }
+   m_len--;
+   sei();
+}
+
 bool I2C::SlaveSendData(const char * data, uint8_t len)
 {
+   TWCR = _BV(TWEA) | _BV(TWINT) | _BV(TWEN) | _BV(TWIE);
    while(len)
    {
       TWCR_WAIT()
-      serial << "Send status: " << GETSTATUS << "\n";
+      // serial << "Send status: " << GETSTATUS << "\n";
       switch (GETSTATUS)
       {
          case (TW_ST_SLA_ACK):
          case (TW_ST_DATA_ACK):
             TWDR = *data;
             data++;
-            len --;
+            len--;
             TWCR = TWCR;
             break;
          case (TW_ST_DATA_NACK):
          case (TW_ST_LAST_DATA):
             TWCR = TWCR;
             TWCR_WAIT()
+            len--;
             return true;
          default:
             TWCR = TWCR | _BV(TWSTO) | _BV(TWEA);
