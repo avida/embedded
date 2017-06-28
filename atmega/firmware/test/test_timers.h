@@ -1,12 +1,12 @@
 #include "utils.h"
 
-int cntr = 0;
-ISR (TIMER0_COMPA_vect)  
-{
-  // serial << "tick\n";
-  // TCNT0=0;
-   cntr++;
-}
+// int cntr = 0;
+// ISR (TIMER0_COMPA_vect)  
+// {
+//   // serial << "tick\n";
+//   // TCNT0=0;
+//    cntr++;
+// }
 
 void setupTimer()
 {
@@ -24,21 +24,31 @@ void setupTimer()
 
 #define PERF_TEST_BEGIN \
    TCCR0B |= _BV(CS00); \
-   TCNT0 = 0;
+   TCNT0 = 0; 
 
 #define PERF_TEST_END \
    serial << "performance test: " << TCNT0 << "\n"; 
+
+
+
+void perf_test()
+{
+   PERF_TEST_BEGIN
+   // *led.m_port = _BV(5);
+   // led = true;
+   gpio::atmega::Pin led (gpio::B, 5);
+   // utils::Delay_us(2);
+   PERF_TEST_END   
+}
 
 void test_main()
 {
    // setupTimer();
    // TCCR0A |= _BV(WGM01);
-   gpio::Pin led (gpio::B, 5);
-   PERF_TEST_BEGIN
-   // *led.m_port = _BV(5);
-   // led = true;
-   // utils::Delay_us(10);
-   PERF_TEST_END
+   utils::CountMillis();
+   utils::Delay_ms(20); 
+   serial << utils::GetTimeValue() << "\n";
+   // perf_test()
    return;
    while(true);
 }

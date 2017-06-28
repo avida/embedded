@@ -6,10 +6,11 @@
 //#define F_CPU 16000000UL
 // led pin = PB5
 // #include "firmware/lamp_firmware.h"
-// #include "firmware/test_firmware.h"
 // #include "firmware/bicycle_fw.h"
 // #include "firmware/greenhouse_fw.h"
 #include "firmware/chess_firmware.h"
+
+// #include "firmware/test_firmware.h"
 // uart::UART serial;
 
 int main(void) {

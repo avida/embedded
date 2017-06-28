@@ -2,6 +2,14 @@
 #include <stdio.h>
 
 char tmp[10];
+#define PRINTABLE_OPERATOR(type, str) \
+Printable& Printable::operator << (type val) \
+{ \
+  sprintf(tmp, str, val); \
+  *this  << tmp; \
+  return *this; \
+}
+
 Printable& Printable::operator << (const char * str)
 {
    while(*str)
@@ -12,30 +20,12 @@ Printable& Printable::operator << (const char * str)
    return *this;
 }
 
-Printable& Printable::operator << (int i)
-{
-  sprintf(tmp, "%d", i);
-  *this  << tmp;
-  return *this;
-}
+PRINTABLE_OPERATOR(int, "%d")
 
-Printable& Printable::operator << (float d)
-{
-  sprintf(tmp, "%f", d);
-  *this <<  d;
-  return *this;
-}
+PRINTABLE_OPERATOR(float, "%f")
 
-Printable& Printable::operator << (unsigned int ui)
-{
-  sprintf(tmp, "%u", ui);
-  *this << tmp;
-  return *this;
-}
+PRINTABLE_OPERATOR(unsigned int, "%u")
 
-Printable& Printable::operator << (unsigned long l)
-{
-  sprintf(tmp, "%lu", l);
-  *this << tmp;
-  return *this;
-}
+PRINTABLE_OPERATOR(unsigned long, "%lu")
+
+PRINTABLE_OPERATOR(char, "%c")

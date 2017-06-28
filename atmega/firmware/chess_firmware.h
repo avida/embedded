@@ -3,6 +3,8 @@
 #include <spi.h>
 #include <utils.h>
 #include <uart.h>
+#include <string.h>
+#include "utils.h"
 
 gpio::atmega::Pin cs(gpio::B, 2);
 gpio::atmega::Pin reset(gpio::B, 1);
@@ -50,9 +52,28 @@ void address_port(uint8_t port)
    }
 }
 
+enum Figures
+{
+   BlackPawn = 'p',
+   BlackRook = 'r',
+   BlackKnight = 'n',
+   BlackBishop = 'b',
+   BlackQueen = 'q',
+   BlackKing = 'k',
+   WhitePawn = 'P',
+   WhiteRook = 'R',
+   WhiteKnight = 'N',
+   WhiteBishop = 'B',
+   WhiteQueen = 'Q',
+   WhiteKing = 'K'
+};
+
+char board[32];
+
 void fw_main()
 {
    second_mux_en = true;
+   memset(board, '0', 32);
    serial << "hi its ches board\n";
    protocol::SPI spi(&cs);
    MFRC522 rfid(spi, cs, reset);
@@ -60,22 +81,40 @@ void fw_main()
    rfid.PCD_SetAntennaGain(MFRC522::RxGain_max);
    uint8_t buffer[18];
    uint8_t index = 0;
+   utils::CountMillis();
+   auto old_time = utils::GetTimeValue();
    while (true)
    {
       if ( ! rfid.PICC_IsNewCardPresent() || ! rfid.PICC_ReadCardSerial() )
       {
          // serial << "no card ( \n";
+         board[index] = '0';
       }
       else
       {
          uint8_t size = sizeof(buffer);
          rfid.MIFARE_Read(6, buffer, &size);
-         // buffer[3]= 0;
-         // serial << (char *)(buffer + 1) << "\n";
-         serial << "card found " << index << "!!\n";
+         // serial << "card found " << index << "!!\n";
+         // buffer[2]= 0;
+         board[index] = buffer[1];
+         // serial << index <<" : " << (char *)(buffer + 1) << "\n";
       }
       index = index >= 31 ? 0 : index + 1;
+      if (index == 0)
+      {
+         auto  time_diff = utils::GetTimeValue() - old_time;
+         for (auto i = 0; i < 4; ++i)
+         {
+            for (auto j = 0; j < 8; ++j)
+            {
+               serial << board[i * 8 + j] <<" ";
+            }
+            serial << "\n";
+         }
+         serial << time_diff << " \n";
+         old_time = utils::GetTimeValue();
+      }
       address_port(index);
-      // utils::Delay_ms(1);
+      // utils::Delay_ms(2);
    }
 }
