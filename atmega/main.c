@@ -11,7 +11,6 @@
 #include "firmware/chess_firmware.h"
 
 // #include "firmware/test_firmware.h"
-// uart::UART serial;
 
 int main(void) {
    fw_main();

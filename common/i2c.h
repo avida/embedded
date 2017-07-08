@@ -4,7 +4,7 @@
 
 namespace protocol
 {
-typedef void (*cmdProcessor)(char cmd, char * buffer, uint8_t *len);
+typedef void (*cmdProcessor)(uint8_t cmd, char **buffer, uint8_t *len);
 class I2C
 {
 public:

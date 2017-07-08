@@ -5,6 +5,7 @@
 #include <uart.h>
 #include <string.h>
 #include "utils.h"
+#include <i2c.h>
 
 gpio::atmega::Pin cs(gpio::B, 2);
 gpio::atmega::Pin reset(gpio::B, 1);
@@ -68,12 +69,27 @@ enum Figures
    WhiteKing = 'K'
 };
 
-char board[32];
+#define BOARD_SIZE 32
+char board[BOARD_SIZE];
+char _board[BOARD_SIZE];
+
+void processCmd(uint8_t cmd, char **_buffer, uint8_t *len)
+{
+   *len = BOARD_SIZE;
+   *_buffer = _board;
+}
+
+#ifndef I2C_ADDR
+#define I2C_ADDR 0x0a
+#endif
 
 void fw_main()
 {
+   protocol::I2C i2c(I2C_ADDR);
+   first_mux_en = false;
    second_mux_en = true;
    memset(board, '0', 32);
+   i2c.ListenForCommand(processCmd);
    serial << "hi its ches board\n";
    protocol::SPI spi(&cs);
    MFRC522 rfid(spi, cs, reset);
@@ -87,7 +103,6 @@ void fw_main()
    {
       if ( ! rfid.PICC_IsNewCardPresent() || ! rfid.PICC_ReadCardSerial() )
       {
-         // serial << "no card ( \n";
          board[index] = '0';
       }
       else

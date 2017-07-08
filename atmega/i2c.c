@@ -1,6 +1,7 @@
 #include <i2c.h>
 #include <avr/io.h>
 #include <util/twi.h>
+#include <utils.h>
 // sda = PC4 = A4
 // scl = PC5 = A5
 #include "atmega_pin.h"
@@ -52,7 +53,7 @@ void I2C::Init(bool master)
 {
    TWSR = 0;
    TWBR = 0x0;
-   TWCR = _BV(TWEN) | _BV(TWIE);
+   TWCR = _BV(TWEN);
    TWSR = 3;
    if (master)
    {
@@ -68,8 +69,6 @@ void I2C::Init(bool master)
    }
 }
 
-
-
 bool I2C::Receive(char *buffer, uint8_t* len)
 {
 
@@ -78,24 +77,30 @@ bool I2C::Receive(char *buffer, uint8_t* len)
    while(ln > 0)
    {
       TWCR_WAIT()
-      serial << "status: " << GETSTATUS << "\n";
+      // serial << GETSTATUS << "\n";
       switch (GETSTATUS)
       {
          case TW_SR_SLA_ACK:
+            TWDR = 0;
             TWCR = TWCR;
          break;
          case TW_SR_DATA_ACK:
             buffer[*len] = TWDR;
             *len += 1;
+            if (*len > 0)
+               TWDR = 20;
             ln--;
             TWCR = TWCR | _BV(TWEA);
          break;
          case TW_SR_STOP:
             TWCR = TWCR;
+            TWCR_WAIT()
+            break;
             return true;
          break;
          default:
-            TWCR = TWCR | _BV(TWSTO);
+            serial << GETSTATUS << "\n";
+            TWCR = TWCR; // | _BV(TWSTO) | _BV(TWEA);
             return false;
       }
       // TWCR = TWCR;
@@ -120,32 +125,6 @@ bool I2C::IsSent()
    return m_len < 0;
 }
 
-ISR(TWI_vect)
-{
-   cli();
-   if (! (TWCR  & (1 << TWINT)))
-      return;
-   // serial << GETSTATUS << "\n";
-   switch (GETSTATUS)
-   {
-      case (TW_ST_SLA_ACK):
-      case (TW_ST_DATA_ACK):
-         TWDR = *m_data;
-         m_data++;
-         TWCR = TWCR;
-         break;
-      case (TW_ST_DATA_NACK):
-      case (TW_ST_LAST_DATA):
-         TWCR = TWCR;
-         // TWCR_WAIT()
-         break;
-      default:
-         TWCR = TWCR | _BV(TWSTO) | _BV(TWEA);
-   }
-   m_len--;
-   sei();
-}
-
 bool I2C::SlaveSendData(const char * data, uint8_t len)
 {
    TWCR = _BV(TWEA) | _BV(TWINT) | _BV(TWEN) | _BV(TWIE);
@@ -157,7 +136,7 @@ bool I2C::SlaveSendData(const char * data, uint8_t len)
       {
          case (TW_ST_SLA_ACK):
          case (TW_ST_DATA_ACK):
-            TWDR = *data;
+            TWDR = 42;//*data;
             data++;
             len--;
             TWCR = TWCR;
@@ -172,6 +151,7 @@ bool I2C::SlaveSendData(const char * data, uint8_t len)
             TWCR = TWCR | _BV(TWSTO) | _BV(TWEA);
             return false;
       }
+      TWDR = 42;
    }
    if (len == 0)
    {
@@ -190,29 +170,88 @@ bool I2C::SlaveSendData(const char * data, uint8_t len)
    }
 }
 
+void (*int_cb_f)(void);
+
+ISR(TWI_vect)
+{
+   // serial << "int\n";
+   cli();
+   if (! (TWCR  & (1 << TWINT)))
+      return;
+   int_cb_f();
+   sei();
+}
+
+void send_int_cb()
+{
+   serial << GETSTATUS << "\n";
+   switch (GETSTATUS)
+   {
+      case (TW_ST_SLA_ACK):
+      case (TW_ST_DATA_ACK):
+         TWDR = *m_data;
+         m_data++;
+         TWCR = TWCR;
+         break;
+      case (TW_ST_DATA_NACK):
+      case (TW_ST_LAST_DATA):
+         TWCR = TWCR;
+         // TWCR_WAIT()
+         break;
+      default:
+         TWCR = TWCR;
+   }
+   m_len--;
+}
+
+cmdProcessor cmd_process_cb;
+char *buffer;
+void cmd_process_int_cb()
+{
+   auto st = GETSTATUS;
+   switch(st)
+   {
+      case TW_SR_SLA_ACK:
+         break;
+      case TW_SR_DATA_ACK:
+         uint8_t len;
+         cmd_process_cb(TWDR, &buffer, &len);
+         m_len = len;
+         break;
+      case TW_ST_DATA_ACK:
+      case TW_ST_SLA_ACK:
+         if (m_len <= 0)
+         {
+            break;
+         }
+         TWDR = *buffer;
+         buffer++;
+         m_len--;
+         break;
+      case TW_ST_LAST_DATA:
+      case TW_ST_DATA_NACK:
+         m_len = -1;
+         break;
+      case TW_SR_STOP:
+         break;
+      case TW_BUS_ERROR:
+         m_len = -1;
+         break;
+      default:
+         // serial << "unknown st: " << st << "\n";
+         return;
+   };
+   TWCR = TWCR;
+}
+
+
 void I2C::ListenForCommand(cmdProcessor cb)
 {
-   char cmd;
-   uint8_t len = 1;
-   Receive(&cmd, &len);
-   if (len == 0)
-   {
-      serial << "Error receiving command \n";
-      return;
-   }
-   TWCR = TWCR;
-   serial << "st: " << GETSTATUS << "\n";
-   TWCR_WAIT()
-   if(GETSTATUS != TW_SR_STOP)
-   {
-      serial << "cmd should be 1 byte long\n";
-      return;
-   }
-   TWCR = TWCR;
-   serial << "cmd is " << cmd << "\n";
-   const char * s = "fuuuck";
-   SlaveSendData(s, 10);
-
+   int_cb_f = cmd_process_int_cb;
+   cmd_process_cb = cb;
+   m_len = 0;
+   sei();
+   TWCR = TWCR | _BV(TWIE);
 }
 
 // char I2C::Listen()

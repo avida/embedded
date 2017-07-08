@@ -1,6 +1,7 @@
 #include "utils.h"
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <uart.h>
 
 namespace utils
 {
@@ -78,4 +79,23 @@ ISR(TIMER0_COMPA_vect)
 InterruptsLock::InterruptsLock() {cli();}
 InterruptsLock::~InterruptsLock() {sei();}
 
+#define DBG_BUF_SIZE 20
+uint8_t dbg_buffer[DBG_BUF_SIZE];
+
+void DebugBuffer::Print()
+{
+   FOR_I(m_ptr)
+   {
+      serial << dbg_buffer[i] << "\n";
+   }
+   serial << "---\n";
+}
+void DebugBuffer::Add(uint8_t num)
+{
+   if (m_ptr >= DBG_BUF_SIZE)
+      return;
+   dbg_buffer[m_ptr++] = num;
+}
+
+DebugBuffer DebugBuffer::debugBuffer;
 } // namespace
