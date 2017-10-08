@@ -21,6 +21,8 @@ extern uart::UART serial;
 #define REG_SETUP_AW  0x03
 #define REG_SETUP_RET 0x04
 #define REG_STATUS    0x07
+#define REG_OBSERVE_TX 0x08
+#define REG_FIFO_STATUS 0x17
 
 #define REG_RX_PW_P0  0x11
 
@@ -62,7 +64,7 @@ char NRF24L01::buffer[NRF_BUFFER_SIZE + 1] = {0x00};
 #define data_buffer (NRF24L01::buffer + 1)
 
 NRF24L01::NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin):
-                  m_spi(spi), m_CE(CEpin), m_config(ENABLE_CRC_BIT|PWR_UP_BIT|RX_BIT), m_dr_cb(NULL)
+                  m_spi(spi), m_payload(kNRFPayload), m_CE(CEpin), m_config(ENABLE_CRC_BIT|PWR_UP_BIT|RX_BIT), m_dr_cb(NULL)
 {
    Init();
 }
@@ -165,7 +167,9 @@ void NRF24L01::StartTransmit()
 
 NRF24L01::NRFStatus NRF24L01::Transmit()
 {
+   serial << "tr\n";
    ExecuteCommand(R_TX_PAYLOAD, m_payload);
+   serial << "tr done\n";
    return NRF24L01::NRFStatus(buffer[0]);
 }
 
@@ -239,19 +243,22 @@ bool NRF24L01::TransmitData()
    auto status = Transmit();
    while(!status.isTransmitted())
    {
+      // serial << "status: " << status.GetStatus() << "\n";
       if (status.IsRetransmitExceed())
       {
+         serial << "retry " << retry_count << "\n";
          RetryTransmit();
          if (MAX_RETRY_COUNT && ++retry_count >= MAX_RETRY_COUNT)
             return false;
       }
-      status = ReadStatus();
+      // status = ReadStatus();
       // ReadRegister(REG_OBSERVE_TX);
       // auto obs = data_buffer[0];
       // ReadRegister(REG_FIFO_STATUS);
       // auto fifo = data_buffer[0];
       // serial << "send st: " << status.GetStatus() <<" obs: " <<obs << " fifo: " << fifo << "\n";
    }
+   serial << "return\n";
    return true;
 }
 
@@ -282,7 +289,9 @@ char* NRF24L01::GetBufferPtr()
 void NRF24L01::ExecuteCommand(char cmd, int len)
 {
    buffer[0] = cmd;
+   // serial <<"spi tr " << len << " \n";
    m_spi.TransferBytes(buffer, len + 1);
+   // serial <<"done\n";
 }
 
 } // namespace

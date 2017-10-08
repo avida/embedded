@@ -235,8 +235,10 @@ void cmd_process_int_cb()
       case TW_SR_STOP:
          break;
       case TW_BUS_ERROR:
+         // serial << "error " << st << "\n";
          m_len = -1;
-         break;
+         TWCR = TWCR | _BV(TWSTO);
+         return;
       default:
          // serial << "unknown st: " << st << "\n";
          return;

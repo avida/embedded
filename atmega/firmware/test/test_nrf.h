@@ -25,10 +25,10 @@ char *buf;
 ISR(INT0_vect)
 {
    utils::InterruptsLock lck;
-   // serial << "Changed\n";
-   // EIFR = 1;
+   serial << "Changed\n";
    if (nrf_ptr)
    nrf_ptr->Async_ext_event();
+   EIFR = 1;
  }
 
 

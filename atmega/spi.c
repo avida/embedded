@@ -67,6 +67,7 @@ void SPI::TransferBytes(char *bytes, int length)
       *bytes = SPDR;
       bytes++;
       length--;
+      // serial << "len: "  << length << "\n";
    }
    if (m_control_pin)
       *m_control_pin = true;

@@ -5,12 +5,17 @@
 // A6-7 = ADC6-7
 //#define F_CPU 16000000UL
 // led pin = PB5
+#ifdef TEST
+
+#include "firmware/test_firmware.h"
+
+#else
 // #include "firmware/lamp_firmware.h"
 // #include "firmware/bicycle_fw.h"
 // #include "firmware/greenhouse_fw.h"
 #include "firmware/chess_firmware.h"
 
-// #include "firmware/test_firmware.h"
+#endif
 
 int main(void) {
    fw_main();
