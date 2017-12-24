@@ -31,42 +31,8 @@ ISR(INT0_vect)
    EIFR = 1;
  }
 
-
-void data_ready()
-{
-      auto status = nrf_ptr->ReceiveData();
-      serial << "received: " << buf << "\n";
-      nrf_ptr->StandBy();
-      bool send_status;
-      if (!strcmp(buf, ping))
-      {
-         serial << "sending " << pong << "\n";
-         if (!nrf_ptr->SendString(pong))
-         {
-            serial << "Failed to sent " << pong << "\n";
-         }
-      }
-      else if (!strcmp(buf, pong))
-      {
-         serial << "sending " << ping << "\n";
-         if (!nrf_ptr->SendString(ping))
-         {
-            serial << "Failed to sent " << ping << "\n";
-         }
-      }
-      else
-      {
-         serial << "UNKNOWN SIGNLA RECEIVED!!! \n";
-         return;
-      }
-      nrf_ptr->Listen();
-      // utils::Delay_ms(1000);
-}
-
 void string_sent()
-{
-
-}
+{}
 
 const uint8_t kPacketSize = 10;
 const char* kPing = "PING";
@@ -79,38 +45,23 @@ void test_pingpong()
    protocol::SPI spi(&cc);
    device::NRF24L01 nrf(spi, ce);
    nrf_ptr  = &nrf;
-
-   protocol::NrfPacket packet(nrf, kPacketSize);
-   char data_buffer[kPacketSize];
-   packet.SetDataPtr(data_buffer);
+   auto nrf_data_buff = nrf.GetBufferPtr();
 
 #ifdef TEST_SEND
-   serial << "sending initial ping\n";
-   memcpy(data_buffer, kPing, kPacketSize);
-   nrf.StartTransmit();
-   if(!packet.Transmit())
-   {
-      serial << "Failed to send initial signal\n";
+   serial << "Test send\n";
+   //memcpy(nrf_data_buff, str, PAYLOAD_SIZE);
+   serial << "Sending: " << str << "\n";
+   if (!nrf.SendString(str)) {
+      serial << "failed to tranmit\n";
+   } else {
+      serial << "Data transimted\n";
    }
-   else
-      serial << "sent\n";
-   nrf.StandBy();
+#else
+   serial << "Test receive\n";
+   nrf.Listen();
+   auto status = nrf.ReceiveData();
+   serial <<"status: " << (int)status.GetStatus() <<  " width: " << nrf.PayloadWidth() << " received: " << nrf_data_buff << "\n";
 #endif
-   // nrf.ReceiveAsync(data_ready);
-   while(1)
-   {  
-      nrf.Listen();
-      packet.Receive();
-      nrf.StandBy();
-      serial << "received: " << data_buffer << "\n";
-      memcpy(data_buffer, kPong, kPacketSize);
-      nrf.StartTransmit();
-      if (!packet.Transmit())
-         serial  << "Transmit failed\n";
-      else
-         serial << "sent " << kPong << "\n";
-      nrf.StandBy();
-   };
 }
 
 void setupInterrupt()

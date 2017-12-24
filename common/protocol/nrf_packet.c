@@ -45,7 +45,7 @@ void NrfPacket::Receive()
       }
       serial << "size is" << size << "\n";
       auto data_size = min(m_size - m_data_cursor, device::NRF24L01::kNRFPayload - 1);
-      serial << "data  is" << data_size << " c:" <<m_data_cursor << "\n";
+      serial << "data  is" << data_size << " c:" << m_data_cursor << "\n";
       if (m_data_cursor + data_size > m_size)
       {
          serial << "Packet too big, truncate\n";
@@ -69,9 +69,9 @@ bool NrfPacket::Transmit()
       auto data_to_transmit = min(m_size - m_data_cursor, device::NRF24L01::kNRFPayload - 1);
       nrf_data_buff[0] = data_to_transmit << 3;
       nrf_data_buff[0] |= m_data_cursor == 0 ? Head : Body;
-      serial  << "cpy\n";
+      // serial  << "cpy\n";
       memcpy(nrf_data_buff + 1, m_data_ptr + m_data_cursor, data_to_transmit);
-      serial  << "done\n";
+      // serial  << "done\n";
       if (!nrf.TransmitData())
       {
          serial <<"return false\n";
