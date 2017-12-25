@@ -25,7 +25,7 @@ char *buf;
 ISR(INT0_vect)
 {
    utils::InterruptsLock lck;
-   serial << "Changed\n";
+   // serial << "Changed\n";
    if (nrf_ptr)
    nrf_ptr->Async_ext_event();
    EIFR = 1;
@@ -38,6 +38,14 @@ const uint8_t kPacketSize = 10;
 const char* kPing = "PING";
 const char* kPong = "PONG";
 
+volatile int packet_counter = 0;
+
+void perf_timer(){
+   serial << packet_counter << " packet(s)\n";
+   packet_counter = 0;
+   utils::SetAlarm(1, perf_timer);
+}
+
 void test_pingpong()
 {
    gpio::atmega::Pin cc(gpio::B, 2);
@@ -49,18 +57,25 @@ void test_pingpong()
 
 #ifdef TEST_SEND
    serial << "Test send\n";
-   //memcpy(nrf_data_buff, str, PAYLOAD_SIZE);
    serial << "Sending: " << str << "\n";
-   if (!nrf.SendString(str)) {
-      serial << "failed to tranmit\n";
-   } else {
-      serial << "Data transimted\n";
+   while(true) {
+      if (!nrf.SendData(str)) {
+         // serial << "failed to tranmit\n";
+      } else {
+        // serial << "Data transimted\n";
+      }
+      // utils::Delay_ms(100);
    }
 #else
    serial << "Test receive\n";
-   nrf.Listen();
-   auto status = nrf.ReceiveData();
-   serial <<"status: " << (int)status.GetStatus() <<  " width: " << nrf.PayloadWidth() << " received: " << nrf_data_buff << "\n";
+   utils::CountSeconds();
+   utils::SetAlarm(1, perf_timer);
+   while(true) {
+      // serial << "Receiving\n";
+      auto pipe = nrf.ReceiveData();
+      // serial <<" received: " << nrf_data_buff << "\n";
+      packet_counter++;
+   }
 #endif
 }
 
@@ -75,6 +90,6 @@ void setupInterrupt()
 
 void test_main()
 {
-   setupInterrupt();
+   // setupInterrupt();
    test_pingpong();
 }

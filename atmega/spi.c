@@ -60,14 +60,13 @@ void SPI::TransferBytes(char *bytes, int length)
 {
    if (m_control_pin)
       *m_control_pin = false;
-   while(length)
+   while(length > 0)
    {
       SPDR = *bytes;
       while(!(SPSR & (1 <<SPIF)));
       *bytes = SPDR;
       bytes++;
       length--;
-      // serial << "len: "  << length << "\n";
    }
    if (m_control_pin)
       *m_control_pin = true;

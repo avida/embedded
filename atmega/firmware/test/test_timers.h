@@ -41,63 +41,29 @@ void perf_test()
    PERF_TEST_END   
 }
 
-enum Figures
-{
-   BlackPawn = 'p',
-   BlackRook = 'r',
-   BlackKnight = 'n',
-   BlackBishop = 'b',
-   BlackQueen = 'q',
-   BlackKing = 'k',
-   WhitePawn = 'P',
-   WhiteRook = 'R',
-   WhiteKnight = 'N',
-   WhiteBishop = 'B',
-   WhiteQueen = 'Q',
-   WhiteKing = 'K'
-};
-
-enum FiguresCodes
-{
-   NoneCode = 0,
-   WhitePawnCode, // 1
-   WhiteRookCode, // 2
-   WhiteKnightCode, // 3
-   WhiteBishopCode, // 4
-   WhiteQueenCode, // 5
-   WhiteKingCode, // 6
-   BlackPawnCode, // 7
-   BlackRookCode, // 8
-   BlackKnightCode, //9
-   BlackBishopCode, //10
-   BlackQueenCode, //11
-   BlackKingCode //12
-};
-
-union BoardEntry
-{
-   struct
-   {
-      uint8_t code : 4;
-      uint8_t addr : 3;
-      uint8_t zero : 1;
-   };
-   char val;
-};
+void timer_cb(){
+   serial <<"timer event\n";
+   utils::SetAlarm(5, timer_cb);
+}
 
 void test_main()
 {
+   utils::CountSeconds();
+   // while(true) {
+   //    auto time = utils::GetTimeValue();
+   //    serial << "time: " << time << "\n";
+   //    utils::Delay_ms(500);
+   // }
+
+   utils::SetAlarm(1, timer_cb);
+
    // setupTimer();
    // TCCR0A |= _BV(WGM01);
    // utils::CountMillis();
-   BoardEntry b;
-   b.code = 8;
-   b.addr = 0x19 & 0x07;
-   b.zero = 0;
-   serial << (uint8_t)b.val <<'\n';
+
    // utils::Delay_ms(20); 
    // serial << utils::GetTimeValue() << "\n";
    // // perf_test()
-   return;
    while(true);
+   return;
 }

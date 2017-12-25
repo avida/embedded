@@ -29,12 +29,13 @@ void Lamp::ReportState()
 
 void Lamp::PrepareTransmit()
 {
-   m_nrf.StandBy();
-   m_nrf.StartTransmit();
+   // m_nrf.StandBy();
+   // m_nrf.StartTransmit();
 }
 
 bool Lamp::Transmit()
 {
+   /*
    const static uint8_t kMaxRetransmitCnt = 10;
    auto status = m_nrf.Transmit();
    auto retransmit_cnt = 0;
@@ -56,6 +57,7 @@ bool Lamp::Transmit()
    status = m_nrf.ReadStatus();
    serial << "st: " << status.GetStatus() << "\n";
    return true;
+   */
 }
 
 void* Lamp::GetBufferPtr()
@@ -65,7 +67,7 @@ void* Lamp::GetBufferPtr()
 
 void Lamp::SendCommand()
 {
-   m_nrf.StartTransmit();
+   //m_nrf.StartTransmit();
 }
 
 void Lamp::ReadTempAndPreasure(uint8_t& temp, uint8_t& press)
@@ -89,6 +91,7 @@ void Lamp::ReceiveUpdate()
 
 bool Lamp::Listen()
 {
+   /*
    m_nrf.StandBy();
    m_nrf.Listen();
    auto status = m_nrf.ReadStatus();
@@ -100,5 +103,6 @@ bool Lamp::Listen()
    while(!status.isReceived());
    status = m_nrf.Receive();
    serial << "received st: " << status.GetStatus() <<"\n";
+   */
 }
 }

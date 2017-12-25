@@ -15,6 +15,7 @@ void Delay_ms(uint16_t ms);
 void Delay_us(uint16_t us);
 void CountSeconds();
 void CountMillis();
+void SetAlarm(int time, void(*cb)());
 unsigned long GetTimeValue();
 class InterruptsLock
 {

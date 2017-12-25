@@ -23,6 +23,8 @@ void Delay_us(uint16_t us)
 }
 
 void (*int_cb)();
+void (*alarm_cb)();
+int alarm_time;
 
 volatile unsigned long _value = 0;
 unsigned long GetTimeValue()
@@ -60,6 +62,11 @@ void Millis_int()
    OCR0A = _value & 1 ? 62 : 63;
 }
 
+void SetAlarm(int time, void(*cb)()){
+   alarm_cb = cb;
+   alarm_time = _value + time;
+}
+
 void CountMillis()
 {
    _value = 0;
@@ -74,6 +81,14 @@ void CountMillis()
 ISR(TIMER0_COMPA_vect)
 {
    int_cb();
+   if (alarm_cb){
+      if (_value == alarm_time)
+      {
+         auto cb = alarm_cb;
+         alarm_cb = 0;
+         cb();
+      }
+   }
 }
 
 InterruptsLock::InterruptsLock() {cli();}

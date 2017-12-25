@@ -29,27 +29,37 @@ public:
    };
 
    NRF24L01(protocol::SPI& spi, gpio::IPinOutput& CEpin);
-   void Init();
    void SetTXAddress(char* addr, int len);
    void SetRXAddress(char* addr, int len, int pipe);
+
+   int ReceiveData();
+   bool SendData(const char *data);
+   char* GetBufferPtr();
+   void StandBy() {m_CE=false; m_state = kStandby;};
+   void ReceiveAsync(Async_cb data_ready);
+   //void TransmitAsync(Async_cb data_ready);
+   NRFStatus ReadStatus();
+   int PayloadWidth();
+
+   char ReadConfig();
+   void Async_ext_event();
+private:
+   void Init();
    NRFStatus Receive();
    void StartTransmit();
-   void Listen();
    NRFStatus Transmit();
    void ResetTransmit();
    void RetryTransmit();
    void ResetReceive();
-   bool SendString(const char *str);
-   void StandBy() {m_CE=false;};
-   char* GetBufferPtr();
-   NRFStatus ReadStatus();
-   int PayloadWidth();
-   char ReadConfig();
-   NRFStatus ReceiveData();
    bool TransmitData();
-   void ReceiveAsync(Async_cb data_ready);
-   void Async_ext_event();
-private:
+   void Listen();
+
+   enum NRFState {
+      kStandby = 1,
+      kTransmitting,
+      kReceiving
+   };
+
    void WriteRegister(int address, int len = 1);
    void ReadRegister(int address, int len = 1);
    // Send write command with cmd name
@@ -61,6 +71,8 @@ private:
    int m_payload;
    gpio::IPinOutput& m_CE;
    char m_config;
+   NRFState m_state;
+
    static char buffer[NRF_BUFFER_SIZE + 1];
    Async_cb m_dr_cb;
 };
