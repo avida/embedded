@@ -6,4 +6,5 @@
 *.hex
 *.exe
 *.swp
-.DEFINES
+.tags
+.sconsign.dblite

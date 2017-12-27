@@ -1,0 +1,66 @@
+Import('COMMON_PATH')
+import os
+
+F_CPU = 16000000
+
+  
+
+if ('m328' in COMMAND_LINE_TARGETS):
+   AVR_DUDE_FLAGS = '-p atmega328p -b 57600'
+   CFLAGS = Split('-D__AVR_ATmega328P__  -DF_CPU={}UL -mmcu=atmega328p'.format(F_CPU))
+else:
+   AVR_DUDE_FLAGS = '-p atmega168 -b 19200'
+   CFLAGS = Split('-D__AVR_ATmega168__  -DF_CPU={}UL -mmcu=atmega168'.format(F_CPU))
+
+
+
+CPPDEFINES= []
+def cb(option,opt, value, parser):
+   global CPPDEFINES
+   CPPDEFINES.append(value)
+
+AddOption("--DEFINE", type="string", action = 'callback', callback = cb)
+
+COM_PORT = ARGUMENTS.get("COM_PORT", "COM5")
+CPPDEFINES += ARGUMENTS.get("DEFINES", "").split()
+
+CFLAGS += Split("-std=c++11 -fno-merge-constants")
+CFLAGS += Split("-funsigned-char -funsigned-bitfields -fshort-enums -Os")
+CFLAGS += Split("-Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax")
+
+fw_builder = Builder(action="""
+   avr-objcopy -j .text -j .data  -O ihex $SOURCE $TARGET 
+""")
+
+env = Environment(ENV = os.environ, 
+                  CC = 'avr-g++', 
+                  CCFLAGS = CFLAGS, 
+                  LINKFLAGS= CFLAGS, 
+                  BUILDERS = {'FW' : fw_builder})
+
+#env.VariantDir(variant_dir = 'build', src_dir = 'src', duplicate = 0)
+if ('bootloader' in COMMAND_LINE_TARGETS):
+  if ('m328' in COMMAND_LINE_TARGETS):
+    cmd = env.Command('flash','3rdparty/ATmegaBOOT_168_atmega328.hex','avrdude -p atmega328p -c usbasp  -U flash:w:$SOURCE')
+  else:
+    cmd = env.Command('flash','3rdparty/ATmegaBOOT_168_diecimila.hex','avrdude -p atmega168 -c usbasp  -U flash:w:$SOURCE')
+  AlwaysBuild(cmd)
+else:
+  env.Append(CPPPATH=[COMMON_PATH, './'])
+  env.Append(CPPDEFINES=CPPDEFINES)
+
+  SOURCE_LIST = Glob('*.c')
+
+  COMMON_SOURCES = Split('device/NRF24L01.c \
+                   device/HD44780.c \
+                   device/mfrc522.c \
+                   protocol/nrf_packet.c \
+                   printable.c \
+                   device/MAX7219.c \
+                   device/sdcard.c ')
+  COMMON_SOURCES = [os.path.join(COMMON_PATH, x) for x in COMMON_SOURCES]
+  elf = env.Program('fw.elf', SOURCE_LIST + COMMON_SOURCES)
+  fw = env.FW('fw.hex', 'fw.elf')
+     
+  upload = env.Command("upload", 'fw.hex', "avrdude -c avrisp {} -P {} -U flash:w:@SOURCE".format(AVR_DUDE_FLAGS, COM_PORT ))
+  AlwaysBuild(upload)
