@@ -4,8 +4,9 @@ import os
 F_CPU = 16000000
 
   
+TARGET = ARGUMENTS.get('target', 'm168')
 
-if ('m328' in COMMAND_LINE_TARGETS):
+if (TARGET == 'm328'):
    AVR_DUDE_FLAGS = '-p atmega328p -b 57600'
    CFLAGS = Split('-D__AVR_ATmega328P__  -DF_CPU={}UL -mmcu=atmega328p'.format(F_CPU))
 else:
@@ -21,7 +22,7 @@ def cb(option,opt, value, parser):
 
 AddOption("--DEFINE", type="string", action = 'callback', callback = cb)
 
-COM_PORT = ARGUMENTS.get("COM_PORT", "COM5")
+COM_PORT = int(ARGUMENTS.get("COM_PORT", "5"))
 CPPDEFINES += ARGUMENTS.get("DEFINES", "").split()
 
 CFLAGS += Split("-std=c++11 -fno-merge-constants")
@@ -62,5 +63,6 @@ else:
   elf = env.Program('fw.elf', SOURCE_LIST + COMMON_SOURCES)
   fw = env.FW('fw.hex', 'fw.elf')
      
-  upload = env.Command("upload", 'fw.hex', "avrdude -c avrisp {} -P {} -U flash:w:@SOURCE".format(AVR_DUDE_FLAGS, COM_PORT ))
-  AlwaysBuild(upload)
+  upload = env.Command("upload", 'fw.hex', "avrdude -c avrisp {} -P COM{} -U flash:w:$SOURCE".format(AVR_DUDE_FLAGS, COM_PORT ))
+  prnt = env.Command("print", upload, ["stty.exe -F /dev/ttyS{} 115200 ".format(COM_PORT-1), "start mintty cat /dev/ttyS{}".format(COM_PORT-1)])
+  AlwaysBuild(upload, prnt)
