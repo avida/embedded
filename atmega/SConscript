@@ -1,5 +1,7 @@
-Import('COMMON_PATH')
+Import('atmega_env', 'COMMON_PATH')
 import os
+
+env = atmega_env
 
 F_CPU = 16000000
 
@@ -12,8 +14,6 @@ if (TARGET == 'm328'):
 else:
    AVR_DUDE_FLAGS = '-p atmega168 -b 19200'
    CFLAGS = Split('-D__AVR_ATmega168__  -DF_CPU={}UL -mmcu=atmega168'.format(F_CPU))
-
-
 
 CPPDEFINES= []
 def cb(option,opt, value, parser):
@@ -29,15 +29,9 @@ CFLAGS += Split("-std=c++11 -fno-merge-constants")
 CFLAGS += Split("-funsigned-char -funsigned-bitfields -fshort-enums -Os")
 CFLAGS += Split("-Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax")
 
-fw_builder = Builder(action="""
-   avr-objcopy -j .text -j .data  -O ihex $SOURCE $TARGET 
-""")
+env.Append(CCFLAGS = CFLAGS, 
+           LINKFLAGS= CFLAGS)
 
-env = Environment(ENV = os.environ, 
-                  CC = 'avr-g++', 
-                  CCFLAGS = CFLAGS, 
-                  LINKFLAGS= CFLAGS, 
-                  BUILDERS = {'FW' : fw_builder})
 
 #env.VariantDir(variant_dir = 'build', src_dir = 'src', duplicate = 0)
 if ('bootloader' in COMMAND_LINE_TARGETS):
@@ -60,9 +54,13 @@ else:
                    device/MAX7219.c \
                    device/sdcard.c ')
   COMMON_SOURCES = [os.path.join(COMMON_PATH, x) for x in COMMON_SOURCES]
+
   elf = env.Program('fw.elf', SOURCE_LIST + COMMON_SOURCES)
+  print_size = env.Command("print_size", 'fw.elf', 'avr-size $SOURCE')
   fw = env.FW('fw.hex', 'fw.elf')
-     
-  upload = env.Command("upload", 'fw.hex', "avrdude -c avrisp {} -P COM{} -U flash:w:$SOURCE".format(AVR_DUDE_FLAGS, COM_PORT ))
+  Depends(fw, print_size)
+
+  upload = env.Command("upload", fw, "avrdude -c avrisp {} -P COM{} -U flash:w:$SOURCE".format(AVR_DUDE_FLAGS, COM_PORT ))
   prnt = env.Command("print", upload, ["stty.exe -F /dev/ttyS{} 115200 ".format(COM_PORT-1), "start mintty cat /dev/ttyS{}".format(COM_PORT-1)])
+
   AlwaysBuild(upload, prnt)
