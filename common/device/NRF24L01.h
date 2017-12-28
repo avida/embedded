@@ -9,7 +9,9 @@
 namespace device
 {
 
-typedef  void (*Async_cb)(void);
+typedef void (*AsyncRecvCb)(int);
+typedef void (*AsyncSendCb)(bool);
+
 class NRF24L01
 {
 public:
@@ -33,10 +35,13 @@ public:
    void SetRXAddress(char* addr, int len, int pipe);
 
    int ReceiveData();
+   void ReceiveDataAsync(AsyncRecvCb cb);
+
    bool SendData(const char *data);
+   void SendDataAsync(AsyncSendCb cb,  const char* data);
+
    char* GetBufferPtr();
    void StandBy() {m_CE=false; m_state = kStandby;};
-   void ReceiveAsync(Async_cb data_ready);
    //void TransmitAsync(Async_cb data_ready);
    NRFStatus ReadStatus();
    int PayloadWidth();
@@ -44,6 +49,9 @@ public:
    char ReadConfig();
    void Async_ext_event();
 private:
+   void PrepareReceive();
+   void PrepareSend(const char* data);
+   bool Retransmit();
    void Init();
    NRFStatus Receive();
    void StartTransmit();
@@ -74,7 +82,8 @@ private:
    NRFState m_state;
 
    static char buffer[NRF_BUFFER_SIZE + 1];
-   Async_cb m_dr_cb;
+   AsyncSendCb send_cb_;
+   AsyncRecvCb recv_cb_;
 };
 
 } // namespace

@@ -27,18 +27,34 @@ ISR(INT0_vect)
    utils::InterruptsLock lck;
    // serial << "Changed\n";
    if (nrf_ptr)
-   nrf_ptr->Async_ext_event();
+   {
+      nrf_ptr->Async_ext_event();
+   }
    EIFR = 1;
  }
 
-void string_sent()
-{}
+volatile int packet_counter = 0;
+
+void string_sent(bool ready)
+{
+   if (ready){
+      packet_counter++;
+   } 
+   nrf_ptr->SendDataAsync(string_sent, str);
+}
+
+void string_recv(int pipe){
+   packet_counter++;
+   auto nrf_data_buff = nrf_ptr->GetBufferPtr();
+   // serial <<"data: " << nrf_data_buff << "\n";
+   // utils::Delay_ms(20);
+   nrf_ptr->ReceiveDataAsync(string_recv);
+}
 
 const uint8_t kPacketSize = 10;
 const char* kPing = "PING";
 const char* kPong = "PONG";
 
-volatile int packet_counter = 0;
 
 void perf_timer(){
    serial << packet_counter << " packet(s)\n";
@@ -57,24 +73,38 @@ void test_pingpong()
 
 #ifdef TEST_SEND
    serial << "Test send\n";
-   serial << "Sending: " << str << "\n";
-   while(true) {
-      if (!nrf.SendData(str)) {
-         // serial << "failed to tranmit\n";
-      } else {
-        // serial << "Data transimted\n";
+   nrf_ptr->SendDataAsync(string_sent, str);
+   // while(true) {
+   //    if (!nrf.SendData(str)) {
+   //       // serial << "failed to tranmit\n";
+   //    } else {
+   //      // serial << "Data transimted\n";
+   //    }
+   //    // utils::Delay_ms(100);
+   // }
+   utils::CountSeconds();
+   auto prev = utils::GetTimeValue();
+   while(true)
+   {
+      if (prev != utils::GetTimeValue())
+      {
+         prev = utils::GetTimeValue();
+         serial <<"Sent " <<  packet_counter << "\n";
+         packet_counter = 0;
       }
-      // utils::Delay_ms(100);
    }
 #else
    serial << "Test receive\n";
    utils::CountSeconds();
-   utils::SetAlarm(1, perf_timer);
+   nrf.ReceiveDataAsync(string_recv);
+   auto prev = utils::GetTimeValue();
    while(true) {
-      // serial << "Receiving\n";
-      auto pipe = nrf.ReceiveData();
-      // serial <<" received: " << nrf_data_buff << "\n";
-      packet_counter++;
+      if (prev != utils::GetTimeValue())
+      {
+         prev = utils::GetTimeValue();
+         serial <<"Received " <<  packet_counter << "\n";
+         packet_counter = 0;
+      }
    }
 #endif
 }
@@ -90,6 +120,6 @@ void setupInterrupt()
 
 void test_main()
 {
-   // setupInterrupt();
+   setupInterrupt();
    test_pingpong();
 }
