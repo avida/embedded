@@ -22,6 +22,16 @@ const char *pong = "PONG";
 device::NRF24L01 *nrf_ptr = NULL;
 char *buf;
 
+
+void setupInterrupt()
+{
+   gpio::atmega::Pin ext_iq(gpio::D, 2);
+   ext_iq.SetToInput();
+   EIMSK = 1;
+   EICRA = 1;
+   sei();
+}
+
 ISR(INT0_vect)
 {
    utils::InterruptsLock lck;
@@ -46,8 +56,6 @@ void string_sent(bool ready)
 void string_recv(int pipe){
    packet_counter++;
    auto nrf_data_buff = nrf_ptr->GetBufferPtr();
-   // serial <<"data: " << nrf_data_buff << "\n";
-   // utils::Delay_ms(20);
    nrf_ptr->ReceiveDataAsync(string_recv);
 }
 
@@ -62,26 +70,45 @@ void perf_timer(){
    utils::SetAlarm(1, perf_timer);
 }
 
-void test_pingpong()
-{
-   gpio::atmega::Pin cc(gpio::B, 2);
-   gpio::atmega::Pin ce(gpio::B, 1);
-   protocol::SPI spi(&cc);
-   device::NRF24L01 nrf(spi, ce);
+#define INITNRF \
+   gpio::atmega::Pin cc(gpio::B, 2); \
+   gpio::atmega::Pin ce(gpio::B, 1); \
+   protocol::SPI spi(&cc); \
+   device::NRF24L01 nrf(spi, ce); \
    nrf_ptr  = &nrf;
-   auto nrf_data_buff = nrf.GetBufferPtr();
+
+void test_send_sync()
+{
+   INITNRF
+   auto nrf_data_buff = nrf_ptr->GetBufferPtr();
+   utils::CountSeconds();
+   utils::SetAlarm(1, perf_timer);
+#ifdef TEST_SEND
+   serial << "Test send\n";
+   while(true){
+      if(nrf_ptr->SendData(str))
+      {
+         packet_counter++;
+      }
+   }
+#else
+   serial << "Test receive\n";
+   while(true){
+      nrf_ptr->ReceiveData();
+      packet_counter++;
+   }
+#endif
+}
+
+void test_send_async()
+{
+   setupInterrupt();
+   INITNRF   
+   auto nrf_data_buff = nrf_ptr->GetBufferPtr();
 
 #ifdef TEST_SEND
    serial << "Test send\n";
    nrf_ptr->SendDataAsync(string_sent, str);
-   // while(true) {
-   //    if (!nrf.SendData(str)) {
-   //       // serial << "failed to tranmit\n";
-   //    } else {
-   //      // serial << "Data transimted\n";
-   //    }
-   //    // utils::Delay_ms(100);
-   // }
    utils::CountSeconds();
    auto prev = utils::GetTimeValue();
    while(true)
@@ -96,7 +123,7 @@ void test_pingpong()
 #else
    serial << "Test receive\n";
    utils::CountSeconds();
-   nrf.ReceiveDataAsync(string_recv);
+   nrf_ptr->ReceiveDataAsync(string_recv);
    auto prev = utils::GetTimeValue();
    while(true) {
       if (prev != utils::GetTimeValue())
@@ -109,17 +136,31 @@ void test_pingpong()
 #endif
 }
 
-void setupInterrupt()
+void test_pingpong()
 {
-   gpio::atmega::Pin ext_iq(gpio::D, 2);
-   ext_iq.SetToInput();
-   EIMSK = 1;
-   EICRA = 1;
-   sei();
+   INITNRF
+   auto nrf_data_buff = nrf.GetBufferPtr();
+   utils::CountSeconds();
+   utils::SetAlarm(1, perf_timer);
+#ifdef TEST_SEND
+  serial<< "Send ping\n";
+   while(!nrf_ptr->SendData(kPing));
+#endif
+   while(true){
+     nrf_ptr->ReceiveData();
+     packet_counter++;
+     if (strcmp(nrf_data_buff, kPing)){
+       while(!nrf_ptr->SendData(kPong));
+     } else if (strcmp(nrf_data_buff, kPong)){
+       while(!nrf_ptr->SendData(kPing));
+     } else {
+     }
+   }
 }
 
 void test_main()
 {
-   setupInterrupt();
+  //  test_send_async();
+  //  test_send_sync();
    test_pingpong();
 }

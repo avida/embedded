@@ -216,7 +216,7 @@ void NRF24L01::PrepareSend(const char* data)
 
 bool NRF24L01::Retransmit() 
 {
-   if (retry_count == MAX_RETRY_COUNT)
+   if (retry_count >= MAX_RETRY_COUNT)
    {
       return false;
    }
