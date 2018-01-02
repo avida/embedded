@@ -2,9 +2,14 @@ import os
 
 SRC = Glob("../common/*/*.c", strings=True) + Glob("../common/*.c")
 AVR_TOOLCHAIN_DIR = 'c:\\avr\\bin'
-#print (SOURCE_LIST)
 
-#env.Program('hello', 'hello.cpp')
+CPPDEFINES= []
+def cb(option,opt, value, parser):
+   global CPPDEFINES
+   CPPDEFINES.append(value)
+
+AddOption("--DEFINE", type="string", action = 'callback', callback = cb)
+
 COMMON_PATH = "../common"
 
 fw_builder = Builder(action="""
@@ -18,6 +23,6 @@ atmega_env = Environment(ENV = os.environ,
 
 atmega_env.AppendENVPath('PATH', AVR_TOOLCHAIN_DIR)
 
-Export('COMMON_PATH', 'atmega_env')
+Export('COMMON_PATH', 'atmega_env', 'CPPDEFINES')
 
 SConscript('atmega/SConscript')

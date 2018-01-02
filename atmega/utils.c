@@ -22,6 +22,8 @@ void Delay_us(uint16_t us)
    }
 }
 
+#ifndef NO_TIME_COUNTER
+
 void (*int_cb)();
 void (*alarm_cb)();
 int alarm_time;
@@ -90,6 +92,7 @@ ISR(TIMER0_COMPA_vect)
       }
    }
 }
+#endif
 
 InterruptsLock::InterruptsLock() {cli();}
 InterruptsLock::~InterruptsLock() {sei();}

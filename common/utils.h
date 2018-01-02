@@ -13,10 +13,14 @@ namespace utils
 
 void Delay_ms(uint16_t ms);
 void Delay_us(uint16_t us);
+
+#ifndef NO_TIME_COUNTER
 void CountSeconds();
 void CountMillis();
 void SetAlarm(int time, void(*cb)());
 unsigned long GetTimeValue();
+#endif
+
 class InterruptsLock
 {
 public:
