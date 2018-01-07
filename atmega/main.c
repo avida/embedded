@@ -10,10 +10,10 @@
 #include "firmware/test_firmware.h"
 
 #else
-// #include "firmware/lamp_firmware.h"
+#include "firmware/lamp_firmware.h"
 // #include "firmware/bicycle_fw.h"
 // #include "firmware/greenhouse_fw.h"
-#include "firmware/chess_firmware.h"
+// #include "firmware/chess_firmware.h"
 
 #endif
 

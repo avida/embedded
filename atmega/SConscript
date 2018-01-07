@@ -37,7 +37,7 @@ else:
   env.Append(CPPPATH=[COMMON_PATH, './'])
   env.Append(CPPDEFINES=CPPDEFINES)
 
-  SOURCE_LIST = Glob('*.c')
+  SOURCE_LIST = Glob('*.c') + Glob('firmware/*.c')
 
   COMMON_SOURCES = Split('device/NRF24L01.c \
                    device/HD44780.c \

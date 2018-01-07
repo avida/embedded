@@ -30,17 +30,17 @@ class Lamp
 {
 public:
    Lamp();
-   void Run();
    void SwitchLight();
    void SetLight(bool on);
-   // Send temperature pressure and light status
+
    void ReportState();
+   bool SendIRSignal(char* signal);
+
    void ReceiveUpdate();
-   bool Listen();
+   int Receive();
+
    void* GetBufferPtr();
    void SendCommand();
-   void PrepareTransmit();
-   bool Transmit();
 private:
    void ReadTempAndPreasure(uint8_t& temp, uint8_t& press);
    gpio::atmega::Pin m_light_pin;

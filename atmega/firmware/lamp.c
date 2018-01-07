@@ -22,42 +22,11 @@ void Lamp::ReportState()
 {
    auto buff = m_nrf.GetBufferPtr();
    auto report = (Report*)(buff);
-   PrepareTransmit();
    ReadTempAndPreasure(report->data[0], report->data[1]);
-   Transmit();
 }
 
-void Lamp::PrepareTransmit()
-{
-   // m_nrf.StandBy();
-   // m_nrf.StartTransmit();
-}
-
-bool Lamp::Transmit()
-{
-   /*
-   const static uint8_t kMaxRetransmitCnt = 10;
-   auto status = m_nrf.Transmit();
-   auto retransmit_cnt = 0;
-   while(!status.isTransmitted())
-   {
-      if (status.IsRetransmitExceed())
-      {
-         // serial << "Retransmit\n";
-         m_nrf.RetryTransmit();
-         retransmit_cnt++;
-      }
-      _delay_ms(500);
-      status = m_nrf.ReadStatus();
-      serial << "st: " << status.GetStatus() << " retr count: " << retransmit_cnt << "\n";
-      if (retransmit_cnt == kMaxRetransmitCnt)
-         return false;
-   }
-   m_nrf.ResetTransmit();
-   status = m_nrf.ReadStatus();
-   serial << "st: " << status.GetStatus() << "\n";
-   return true;
-   */
+bool Lamp::SendIRSignal(char* signal) {
+      return m_nrf.SendData(signal);
 }
 
 void* Lamp::GetBufferPtr()
@@ -89,20 +58,8 @@ void Lamp::SetLight(bool on)
 void Lamp::ReceiveUpdate()
 {}
 
-bool Lamp::Listen()
-{
-   /*
-   m_nrf.StandBy();
-   m_nrf.Listen();
-   auto status = m_nrf.ReadStatus();
-   do {
-      status = m_nrf.ReadStatus();
-      serial << "st: " << status.GetStatus() << "\n";
-      _delay_ms(500);
-   }
-   while(!status.isReceived());
-   status = m_nrf.Receive();
-   serial << "received st: " << status.GetStatus() <<"\n";
-   */
+int Lamp::Receive() {
+      return m_nrf.ReceiveData();
 }
+
 }
