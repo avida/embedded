@@ -13,7 +13,7 @@
 #include "atmega_pin.h"
 
 #include "lamp.h"
-
+#include "dht.h"
 extern uart::UART serial;
 irRemote::DataDecoder ir_decoder;
 
@@ -44,15 +44,18 @@ firmware::Lamp lamp;
 char str[60];
 void onDecode (void* d)
 {
+//    utils::InterruptsLock lck;
    char* data = (char *)d;
    sprintf(str, "decoded: %02x%02x%02x\n", *(data+2), *(data+1), *data );
    serial << str;
+   /*
    if (lamp.SendIRSignal(data)) {
        serial << "Sent\n";
    }
    else {
        serial << "Failed to send\n";
    }
+   */
 }
 
 #define REPORT_CAST(a) ((firmware::Report*)a)
@@ -63,12 +66,26 @@ void fw_main()
 {
 
    serial << "hi\n";
+   auto data = (char *)lamp.GetBufferPtr();
 #ifndef TEST_RECV
    decoderPin.SetToInput();
    ir_decoder.SetDecodeCB(onDecode);
    setupTimer();
+   sensors::DHT dht(gpio::D, 4, /*DHT22*/true);
+   while(true){
+    serial << "read data\n";
+    if (dht.ReadData())
+      {
+        serial << "temp: "  << dht.GetTemperature() << "\n";
+        serial << "hum: "<< dht.GetHumidity() << "\n";
+    }
+   else {
+       serial<<"Failed to read data\n";
+   }
+    _delay_ms(1000);
+   }
+
 #else
-   auto data = (char *)lamp.GetBufferPtr();
    while(true) {
        lamp.Receive();
        sprintf(str, "received: %02x%02x%02x\n", *(data+2), *(data+1), *data );
