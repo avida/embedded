@@ -195,7 +195,7 @@ void NRF24L01::ResetTransmit()
 {
    // reset status bit
    ExecuteCommand(FLUSH_TX);
-   data_buffer[0] =  TX_DS_BIT;
+   data_buffer[0] =  TX_DS_BIT | MAX_RT_BIT;
    WriteRegister(REG_STATUS);
 }
 

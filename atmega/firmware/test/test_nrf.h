@@ -154,6 +154,7 @@ void test_pingpong()
      } else if (strcmp(nrf_data_buff, kPong)){
        while(!nrf_ptr->SendData(kPing));
      } else {
+       serial << "unknown signal " << nrf_data_buff <<"\n";
      }
    }
 }
@@ -161,6 +162,6 @@ void test_pingpong()
 void test_main()
 {
   //  test_send_async();
-  //  test_send_sync();
-   test_pingpong();
+   test_send_sync();
+  //  test_pingpong();
 }

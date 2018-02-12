@@ -1,9 +1,9 @@
 #pragma once 
-#include "printable.h"
+#include "myprintable.h"
 
 namespace uart
 {
-   class UART: public Printable
+   class UART: public my::Printable
    {
    public:
       UART();

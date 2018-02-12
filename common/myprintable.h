@@ -1,5 +1,5 @@
 #pragma once
-
+namespace my {
 class Printable
 {
 public:
@@ -12,3 +12,4 @@ public:
 protected:
    virtual void PrintChar(char ch) = 0;
 };
+}

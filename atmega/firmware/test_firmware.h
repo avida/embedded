@@ -14,7 +14,7 @@
 
 // #include "test/test_spi.h"
 
-#include "test/test_irdecoder.h"
+// #include "test/test_irdecoder.h"
 
 // #include "test/test_dht11.h"
 
@@ -24,7 +24,7 @@
 
 // #include "test/test_bmp180.h"
 
-// #include "test/test_nrf.h"
+#include "test/test_nrf.h"
 
 // #include "test/test_max7219.h"
 

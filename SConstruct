@@ -15,13 +15,14 @@ COMMON_PATH = "../common"
 fw_builder = Builder(action="""
    avr-objcopy -j .text -j .data  -O ihex $SOURCE $TARGET 
 """)
-
 atmega_env = Environment(ENV = os.environ, 
                   tools = ['mingw'],
-                  CC = 'avr-g++', 
+                  CC = 'avr-g++',
+                  CXX = 'avr-g++',
                   BUILDERS = {'FW' : fw_builder})
 
 atmega_env.AppendENVPath('PATH', AVR_TOOLCHAIN_DIR)
+atmega_env.EnableArduino = True
 
 Export('COMMON_PATH', 'atmega_env', 'CPPDEFINES')
 

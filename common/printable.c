@@ -1,4 +1,4 @@
-#include "printable.h"
+#include "myprintable.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -11,6 +11,8 @@ Printable& Printable::operator << (type val) \
   return *this; \
 }
 
+namespace my {
+ 
 Printable& Printable::operator << (const char * str)
 {
    while(*str)
@@ -37,3 +39,4 @@ PRINTABLE_OPERATOR(unsigned int, "%u")
 PRINTABLE_OPERATOR(unsigned long, "%lu")
 
 PRINTABLE_OPERATOR(char, "%c")
+}

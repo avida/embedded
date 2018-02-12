@@ -23,7 +23,8 @@ CFLAGS += Split("-funsigned-char -funsigned-bitfields -fshort-enums -Os")
 CFLAGS += Split("-Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax")
 
 env.Append(CCFLAGS = CFLAGS, 
-           LINKFLAGS= CFLAGS)
+           LINKFLAGS= CFLAGS,
+           CXXFLAGS = CFLAGS)
 
 
 #env.VariantDir(variant_dir = 'build', src_dir = 'src', duplicate = 0)
@@ -34,10 +35,17 @@ if ('bootloader' in COMMAND_LINE_TARGETS):
     cmd = env.Command('flash','3rdparty/ATmegaBOOT_168_diecimila.hex','avrdude -p atmega168 -c usbasp  -U flash:w:$SOURCE')
   AlwaysBuild(cmd)
 else:
+  
+  SOURCE_LIST = Glob('*.c') + Glob('firmware/*.c')
+  if env.EnableArduino:
+    ARDUINO_SOURCES = Glob('arduino/*.cpp')
+    SOURCE_LIST += ARDUINO_SOURCES
+    SOURCE_LIST += Glob('libs/*.cpp')
+    env.Append(CPPPATH = ['arduino', 'libs'])
+    CPPDEFINES.append("ARDUINO_LIBS")
+
   env.Append(CPPPATH=[COMMON_PATH, './'])
   env.Append(CPPDEFINES=CPPDEFINES)
-
-  SOURCE_LIST = Glob('*.c') + Glob('firmware/*.c')
 
   COMMON_SOURCES = Split('device/NRF24L01.c \
                    device/HD44780.c \

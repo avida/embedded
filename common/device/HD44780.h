@@ -1,13 +1,13 @@
 #pragma once
 
-#include "printable.h"
+#include "myprintable.h"
 #include "atmega_pin.h"
 #include <i2c.h>
 
 namespace device
 {
    
-class HD44780: public Printable
+class HD44780: public my::Printable
 {
 public:
    HD44780(gpio::IPinOutput& rs,
