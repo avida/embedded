@@ -277,12 +277,14 @@ void NRF24L01::Async_ext_event()
       if(status.isTransmitted())
       {
          send_cb_(true);
+         ResetTransmit();
       }
       else
       {
          if (!Retransmit())
          {
             send_cb_(false);
+            ResetTransmit();
          }
       }
    } else  // Code for Rasync receive

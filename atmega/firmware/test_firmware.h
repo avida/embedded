@@ -24,7 +24,7 @@
 
 // #include "test/test_bmp180.h"
 
-#include "test/test_nrf.h"
+// #include "test/test_nrf.h"
 
 // #include "test/test_max7219.h"
 
@@ -41,6 +41,8 @@
 // #include "test/test_hd44780.h"
 
 // #include "test/test_mfrc522.h"
+
+#include "test/test_arduino.h"
 
 void fw_main()
 {
