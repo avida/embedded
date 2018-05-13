@@ -1,7 +1,7 @@
 import os
 
 SRC = Glob("../common/*/*.c", strings=True) + Glob("../common/*.c")
-AVR_TOOLCHAIN_DIR = 'c:\\avr\\bin'
+AVR_TOOLCHAIN_DIR = r'g:\toolchains\avr\bin'
 
 CPPDEFINES= []
 def cb(option,opt, value, parser):
@@ -25,5 +25,18 @@ atmega_env.AppendENVPath('PATH', AVR_TOOLCHAIN_DIR)
 atmega_env.EnableArduino = True
 
 Export('COMMON_PATH', 'atmega_env', 'CPPDEFINES')
+ACTION = ARGUMENTS.get('action', 'm168')
 
-SConscript('atmega/SConscript')
+if (ACTION == 'flash'):
+    FW_PATH = r".\atmega\3rdparty\{}"
+    FWs = {"m168": "ATmegaBOOT_168_diecimila.hex",
+           "m328": "ATmegaBOOT_168_atmega328.hex"}
+    TARGET = ARGUMENTS.get('target', 'm168')
+    FW = FW_PATH.format(FWs[TARGET])
+    TARGET+='p'
+    cmd = "avrdude -p {}  -c usbasp  -U flash:w:{}".format(TARGET, FW)
+    print("Flashing 328 with cmd {}".format(cmd))
+    flash = atmega_env.Command("flash",FW,  [cmd])
+    AlwaysBuild(flash)
+else:
+    SConscript('atmega/SConscript')

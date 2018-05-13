@@ -28,45 +28,38 @@ env.Append(CCFLAGS = CFLAGS,
 
 
 #env.VariantDir(variant_dir = 'build', src_dir = 'src', duplicate = 0)
-if ('bootloader' in COMMAND_LINE_TARGETS):
-  if ('m328' in COMMAND_LINE_TARGETS):
-    cmd = env.Command('flash','3rdparty/ATmegaBOOT_168_atmega328.hex','avrdude -p atmega328p -c usbasp  -U flash:w:$SOURCE')
-  else:
-    cmd = env.Command('flash','3rdparty/ATmegaBOOT_168_diecimila.hex','avrdude -p atmega168 -c usbasp  -U flash:w:$SOURCE')
-  AlwaysBuild(cmd)
-else:
-  
-  SOURCE_LIST = Glob('*.c') + Glob('firmware/*.c')
-  if env.EnableArduino:
-    ARDUINO_SOURCES = Glob('arduino/*.cpp')
-    SOURCE_LIST += ARDUINO_SOURCES
-    SOURCE_LIST += Glob('libs/*.cpp')
-    env.Append(CPPPATH = ['arduino', 'libs'])
-    CPPDEFINES.append("ARDUINO_LIBS")
 
-  env.Append(CPPPATH=[COMMON_PATH, './'])
-  env.Append(CPPDEFINES=CPPDEFINES)
+SOURCE_LIST = Glob('*.c') + Glob('firmware/*.c')
+if env.EnableArduino:
+  ARDUINO_SOURCES = Glob('arduino/*.cpp')
+  SOURCE_LIST += ARDUINO_SOURCES
+  SOURCE_LIST += Glob('libs/*.cpp')
+  env.Append(CPPPATH = ['arduino', 'libs'])
+  CPPDEFINES.append("ARDUINO_LIBS")
 
-  COMMON_SOURCES = Split('device/NRF24L01.c \
-                   device/HD44780.c \
-                   device/mfrc522.c \
-                   protocol/nrf_packet.c \
-                   printable.c \
-                   device/MAX7219.c \
-                   rc_decoder/rc_pulse.c \
-                   rc_decoder/rc_state_machine.c \
-                   rc_decoder/rc_base_state_machine.c \
-                   rc_decoder/rc_decoder.c \
-                   rc_decoder/rc_pulse_data.c \
-                   device/sdcard.c ')
-  COMMON_SOURCES = [os.path.join(COMMON_PATH, x) for x in COMMON_SOURCES]
+env.Append(CPPPATH=[COMMON_PATH, './'])
+env.Append(CPPDEFINES=CPPDEFINES)
 
-  elf = env.Program('fw.elf', SOURCE_LIST + COMMON_SOURCES)
-  print_size = env.Command("print_size", 'fw.elf', 'avr-size $SOURCE')
-  fw = env.FW('fw.hex', 'fw.elf')
-  Depends(fw, print_size)
+COMMON_SOURCES = Split('device/NRF24L01.c \
+                  device/HD44780.c \
+                  device/mfrc522.c \
+                  protocol/nrf_packet.c \
+                  printable.c \
+                  device/MAX7219.c \
+                  rc_decoder/rc_pulse.c \
+                  rc_decoder/rc_state_machine.c \
+                  rc_decoder/rc_base_state_machine.c \
+                  rc_decoder/rc_decoder.c \
+                  rc_decoder/rc_pulse_data.c \
+                  device/sdcard.c ')
+COMMON_SOURCES = [os.path.join(COMMON_PATH, x) for x in COMMON_SOURCES]
 
-  upload = env.Command("upload", fw, ["taskkill /F  /IM  avrdude.exe || echo done", "avrdude -c avrisp {} -P COM{} -U flash:w:$SOURCE".format(AVR_DUDE_FLAGS, COM_PORT )])
-  prnt = env.Command("print", upload, ["stty.exe -F /dev/ttyS{} 115200 ".format(COM_PORT-1), "start mintty cat /dev/ttyS{}".format(COM_PORT-1)])
+elf = env.Program('fw.elf', SOURCE_LIST + COMMON_SOURCES)
+print_size = env.Command("print_size", 'fw.elf', 'avr-size $SOURCE')
+fw = env.FW('fw.hex', 'fw.elf')
+Depends(fw, print_size)
 
-  AlwaysBuild(upload, prnt)
+upload = env.Command("upload", fw, ["taskkill /F  /IM  avrdude.exe || echo done", "avrdude -c avrisp {} -P COM{} -U flash:w:$SOURCE".format(AVR_DUDE_FLAGS, COM_PORT )])
+prnt = env.Command("print", upload, ["stty.exe -F /dev/ttyS{} 115200 ".format(COM_PORT-1), "start mintty cat /dev/ttyS{}".format(COM_PORT-1)])
+
+AlwaysBuild(upload, prnt)

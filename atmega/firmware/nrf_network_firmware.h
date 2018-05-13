@@ -8,6 +8,26 @@ RCSwitch* pSwitch;
 device::NRF24L01 *nrf_ptr = NULL;
 volatile bool sending = false;
 const char* str = "test";
+enum {
+    A = 6980744,
+    B = 6980740,
+    C = 6980738,
+    D = 6980737
+} SmallRCCodes;
+
+enum {
+    Aon = 16762196,
+    Aoff = 16762193,
+    Bon = 16765268,
+    Boff = 16765265,
+    Con = 16766036,
+    Coff = 16766033,
+    Don =  16766228,
+    Doff = 16766225,
+    Eon = 16766276,
+    Eoff = 16766273
+} BigRemoteCodes;
+
 ISR(INT1_vect)
 {
    utils::InterruptsLock lck;
@@ -26,12 +46,9 @@ void setup_pin_interrupt() {
 
 void data_sent(bool ready)
 {
-//    if (ready){
-//        serial << "Data sent\n";
-//    } else
-//    {
-//        serial << "Send failed\n";
-//    }
+   if (!ready){
+       serial << "Data sent failed\n";
+   }
    sending = false;
 }
 
@@ -49,6 +66,12 @@ typedef struct {
     unsigned long value;
 } Packet;
 
+void sendCode(RCSwitch* transmitter, unsigned long code)
+{
+    utils::InterruptsLock lck;
+    transmitter->send(code, 24);
+}
+
 void fw_main()
 {
     init();
@@ -58,22 +81,36 @@ void fw_main()
     device::NRF24L01 nrf(spi, ce);
     nrf_ptr  = &nrf;
     serial << "Hi\n";
+    serial << sizeof(unsigned long) <<"\n";
     RCSwitch mySwitch = RCSwitch();
+    RCSwitch transmitter = RCSwitch();
     mySwitch.enableReceive();
     pSwitch = &mySwitch;
-    
     setup_pin_interrupt();
+    transmitter.enableTransmit(4);
     auto nrf_data_buff = nrf_ptr->GetBufferPtr();
     Packet packet = {42, 0}; 
+    serial << "start\n";
     while(1) {
-        if (mySwitch.available()){
+        if ( mySwitch.available()){
             auto RCcode = mySwitch.getReceivedValue();
             packet.value = RCcode;
-            // serial <<  RCcode << "\n";
-            *((unsigned long *) nrf_data_buff + 1) = RCcode;
+            serial <<  RCcode << "\n";
             sending = true;
             nrf.SendDataAsync(data_sent, (char *)&packet);
             pSwitch->resetAvailable();
+            switch (RCcode) {
+                case C:
+                {
+                    sendCode(&transmitter,Aon);
+                    break;
+                }
+                case D:
+                {
+                    sendCode(&transmitter,Aoff);
+                    break;
+                }
+            }
         }
      }
 }
