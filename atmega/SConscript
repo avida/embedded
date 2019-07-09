@@ -35,25 +35,16 @@ ARDUINO_SOURCES = Glob('arduino/*.cpp')
 
 SOURCE_LIST = LIB_SOURCES + COMMON_SOURCES + ARDUINO_SOURCES
 
-env.Append(CPPPATH = ['arduino', 'libs'])
+env.Append(CPPPATH = [Dir('arduino'), Dir('libs')])
 CPPDEFINES.append("ARDUINO_LIBS")
 
-env.Append(CPPPATH=[COMMON_PATH, './'])
+env.Append(CPPPATH=[Dir(COMMON_PATH), Dir('./')])
 env.Append(CPPDEFINES=CPPDEFINES)
 
 COMMON_SRC = Glob(COMMON_PATH + "/device/*c") + \
                   Glob(COMMON_PATH + "/protocol/*c") + \
                   Glob(COMMON_PATH + "/rc_decoder/*c") +  \
                   Glob(COMMON_PATH + "/*c")
-
-PROGRAM_SOURCES = Glob("*.c")
-print([ str(x) for x in SOURCE_LIST])
-#exit(0)
-
-elf = env.Program('fw.elf', SOURCE_LIST + COMMON_SRC + PROGRAM_SOURCES)
-print_size = env.Command("print_size", 'fw.elf', 'avr-size $SOURCE')
-fw = env.FW('fw.hex', 'fw.elf')
-Depends(fw, print_size)
 
 AddOption('--flash',
           action='store_true',
@@ -65,3 +56,8 @@ if GetOption('flash'):
    upload = env.Command("upload", fw, ["avrdude -c avrisp {} -P /dev/ttyUSB0 -U flash:w:$SOURCE".format(AVR_DUDE_FLAGS)])
    prnt = env.Command("print", upload, ["stty.exe -F /dev/ttyS{} 115200 ".format(COM_PORT-1), "start mintty cat /dev/ttyS{}".format(COM_PORT-1)])
    AlwaysBuild(upload, prnt)
+
+Export('COMMON_SRC', 'SOURCE_LIST', 'env')
+
+SConscript('nrf/SConscript')
+
