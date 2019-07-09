@@ -22,7 +22,6 @@ atmega_env = Environment(ENV = os.environ,
                   BUILDERS = {'FW' : fw_builder})
 
 atmega_env.AppendENVPath('PATH', AVR_TOOLCHAIN_DIR)
-atmega_env.EnableArduino = True
 
 Export('COMMON_PATH', 'atmega_env', 'CPPDEFINES')
 ACTION = ARGUMENTS.get('action', 'm168')

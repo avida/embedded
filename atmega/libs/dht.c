@@ -7,7 +7,7 @@
 #include <avr/power.h>
 #include <avr/interrupt.h>
 #include <string.h>
-#include "../atmega/atmega_pin.h"
+#include "atmega_pin.h"
 #define DHT_DEBUG
 #ifdef DHT_DEBUG
 

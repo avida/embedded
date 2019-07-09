@@ -102,7 +102,7 @@ void RFIDReader::WriteRegister(char reg, char data)
    command |= reg << 1;
    rfid_buffer[0] = command;
    rfid_buffer[1] = data;
-   m_spi.TranseferBytes(rfid_buffer, 2);
+   m_spi.TransferBytes(rfid_buffer, 2);
 }
 
 char RFIDReader::ReadRegister(char reg)
@@ -110,7 +110,7 @@ char RFIDReader::ReadRegister(char reg)
    char command = 1 << 7;
    command |= reg << 1;
    rfid_buffer[0] = command;
-   m_spi.TranseferBytes(rfid_buffer, 2);
+   m_spi.TransferBytes(rfid_buffer, 2);
    return rfid_buffer[1];
 }
 
@@ -120,7 +120,7 @@ void RFIDReader::ReadFIFO(int bytes)
    command |= FIFODataReg << 1;
    //rfid_buffer[0] = command;
    memset(rfid_buffer , command, bytes + 1);
-   m_spi.TranseferBytes(rfid_buffer, bytes + 1);
+   m_spi.TransferBytes(rfid_buffer, bytes + 1);
 }
 
 void RFIDReader::WriteFIFO(int bytes)
@@ -128,7 +128,7 @@ void RFIDReader::WriteFIFO(int bytes)
    char command = 0;
    command |= FIFODataReg << 1;
    rfid_buffer[0] = command;
-   m_spi.TranseferBytes(rfid_buffer, bytes + 1);
+   m_spi.TransferBytes(rfid_buffer, bytes + 1);
 }
 
 

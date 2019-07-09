@@ -1,4 +1,4 @@
-#include "max7219.h"
+#include "MAX7219.h"
 #ifdef FONT_SUPPORT
 #include "font8x8_basic.h"
 #endif
