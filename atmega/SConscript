@@ -61,4 +61,5 @@ Export('COMMON_SRC', 'SOURCE_LIST', 'env')
 
 SConscript('nrf/SConscript')
 SConscript('lamp/SConscript')
+SConscript('chess/SConscript')
 SConscript('prototypes/SConscript')

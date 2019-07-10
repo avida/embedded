@@ -4,7 +4,6 @@
 #include <utils.h>
 #include <uart.h>
 #include <string.h>
-#include "utils.h"
 #include <i2c.h>
 
 gpio::atmega::Pin cs(gpio::B, 2); //pin 10
@@ -164,7 +163,7 @@ bool readMFRC(MFRC522& reader, uint8_t *buffer)
       }
 }
 
-void fw_main()
+int main()
 {
    protocol::I2C i2c(I2C_ADDR);
    // set enable pin to low to enable miltiplexers
@@ -212,4 +211,5 @@ void fw_main()
       //    old_time = utils::GetTimeValue();
       // }
    }
+   return 0;
 }

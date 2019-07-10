@@ -1,13 +1,14 @@
 Import('env', 'COMMON_SRC' , 'SOURCE_LIST')
+import copy
 
-if 'ARDUINO_LIBS' not in env['CPPDEFINES']:
+if "ARDUINO_LIBS" in env["CPPDEFINES"]:
    Return()
-
-PROGRAM_SOURCES = Glob("*.c") 
-FW_NAME = 'lamp.elf'
+PROGRAM_SOURCES = [File("main.c")]
+FW_NAME = 'chess.elf'
 e = env.Program(FW_NAME, COMMON_SRC + SOURCE_LIST + PROGRAM_SOURCES)
 
 print_size = env.Command("print_size", FW_NAME, 'avr-size $SOURCE')
+
 fw = env.FW(FW_NAME + '.hex', FW_NAME)
 Depends(fw, print_size)
 
