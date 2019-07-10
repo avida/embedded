@@ -21,6 +21,7 @@ CPPDEFINES += ARGUMENTS.get("DEFINES", "").split()
 CFLAGS += Split("-std=c++11 -fno-merge-constants")
 CFLAGS += Split("-funsigned-char -funsigned-bitfields -fshort-enums -Os")
 CFLAGS += Split("-Wall -ffunction-sections -Wl,--gc-sections -Wl,--relax")
+CFLAGS += ["-fdiagnostics-color=auto"]
 
 env.Append(CCFLAGS = CFLAGS, 
            LINKFLAGS= CFLAGS,

@@ -2,7 +2,9 @@ Import('env', 'COMMON_SRC' , 'SOURCE_LIST')
 import copy
 
 if "ARDUINO_LIBS" in env["CPPDEFINES"]:
+   print("Please disable arduino lib compatability to build chess firmware")
    Return()
+
 PROGRAM_SOURCES = [File("main.c")]
 FW_NAME = 'chess.elf'
 e = env.Program(FW_NAME, COMMON_SRC + SOURCE_LIST + PROGRAM_SOURCES)
