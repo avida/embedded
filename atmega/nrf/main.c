@@ -46,9 +46,10 @@ ISR(INT1_vect)
  }
 
 void setup_pin_interrupt() {
+   // Enable exteranl interrupts for both INT0 and INT1 pins
    EIMSK = 1<<INT1 | 1<<INT0;
-   EICRA = 1<<ISC10 | 1;
-   EIFR = 1<<INTF1 | 1<<INTF0;
+   // INT1 should trigger on any logical change and INT0 only on failing edge
+   EICRA = 1<<ISC10 | 1<< ISC01 ;
    sei();
 }
 
