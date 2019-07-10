@@ -60,4 +60,5 @@ if GetOption('flash'):
 Export('COMMON_SRC', 'SOURCE_LIST', 'env')
 
 SConscript('nrf/SConscript')
+SConscript('lamp/SConscript')
 

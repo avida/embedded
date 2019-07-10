@@ -1,4 +1,10 @@
-#pragma once
+//dccduino ->   gpio
+// D0-7 = PD0-7
+// D8-13 = PB0-5
+// A0-5 -> PC0-5
+// A6-7 = ADC6-7
+//#define F_CPU 16000000UL
+// led pin = PB5
 
 #include <atmega_pin.h>
 #include <stdlib.h>
@@ -62,9 +68,7 @@ void onDecode (void* d)
 
 #define CMD_CAST(a) ((firmware::Command*)a)
 
-void fw_main()
-{
-
+int main(void) {
    serial << "hi\n";
    auto data = (char *)lamp.GetBufferPtr();
 #ifndef TEST_RECV

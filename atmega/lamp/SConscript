@@ -1,0 +1,10 @@
+Import('env', 'COMMON_SRC' , 'SOURCE_LIST')
+
+PROGRAM_SOURCES = Glob("*.c") 
+FW_NAME = 'lamp.elf'
+e = env.Program(FW_NAME, COMMON_SRC + SOURCE_LIST + PROGRAM_SOURCES)
+
+print_size = env.Command("print_size", FW_NAME, 'avr-size $SOURCE')
+fw = env.FW(FW_NAME + '.hex', FW_NAME)
+Depends(fw, print_size)
+
