@@ -12,7 +12,7 @@ pip install scons
 Then  its needed to install avr compiler:
 
 ``` sh
-sudo apt install -y avr-g++ avr-libc
+bash scripts/deps.sh
 ```
 
 Enter scons command to build all targets:
