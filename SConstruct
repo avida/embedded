@@ -10,6 +10,7 @@ def cb(option,opt, value, parser):
 
 AddOption("--DEFINE", type="string", action = 'callback', callback = cb)
 
+
 COMMON_PATH = "../common"
 
 fw_builder = Builder(action="""
@@ -27,7 +28,9 @@ Export('COMMON_PATH', 'atmega_env', 'CPPDEFINES')
 ACTION = ARGUMENTS.get('action', 'm168')
 
 if (ACTION == 'flash'):
-    FW_PATH = r".\atmega\3rdparty\{}"
+   # command example: 
+   # scons action=flash target=m328 
+    FW_PATH = r"./atmega/bootloader/{}"
     FWs = {"m168": "ATmegaBOOT_168_diecimila.hex",
            "m328": "ATmegaBOOT_168_atmega328.hex"}
     TARGET = ARGUMENTS.get('target', 'm168')
